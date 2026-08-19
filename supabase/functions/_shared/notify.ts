@@ -55,6 +55,54 @@ export async function sendStampEmail(opts: {
   }
 }
 
+// Le manda al dueño del negocio los datos que tenemos guardados de un
+// cliente, cuando ese cliente pidió una copia (webhook "customers/data_request"
+// de Tiendanube). El dueño se lo reenvía al cliente por su canal habitual --
+// no tenemos un flujo de autoservicio para esto todavía.
+export async function sendDataRequestReport(opts: {
+  ownerEmail: string;
+  customerEmail: string;
+  reportText: string;
+}): Promise<boolean> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY no configurada -- no se manda el reporte de datos.");
+    return false;
+  }
+
+  const html = `<pre style="font-family:ui-monospace,monospace;white-space:pre-wrap;font-size:13px;">${escapeHtml(opts.reportText)}</pre>`;
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: FROM,
+        to: [opts.ownerEmail],
+        subject: `Pedido de datos -- ${opts.customerEmail}`,
+        html,
+      }),
+    });
+    if (!res.ok) {
+      console.error("Error enviando reporte de datos:", res.status, await res.text());
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("Excepción enviando reporte de datos:", e);
+    return false;
+  }
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string
+  ));
+}
+
 function renderEmailHtml(opts: {
   name: string;
   currentStamps: number;
@@ -85,10 +133,4 @@ function renderEmailHtml(opts: {
   </table>
 </body>
 </html>`;
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string
-  ));
 }

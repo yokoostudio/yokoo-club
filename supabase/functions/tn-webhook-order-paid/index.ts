@@ -6,6 +6,7 @@
 // así que hay que pedirle el pedido completo a su API para sacar el mail.
 
 import { sendStampEmail } from "../_shared/notify.ts";
+import { verifyTiendanubeHmac } from "../_shared/tiendanube.ts";
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {
@@ -25,7 +26,7 @@ Deno.serve(async (req: Request) => {
   // header "x-linkedstore-hmac-sha256". Confirmado con un pedido real.
   const secret = Deno.env.get("TIENDANUBE_CLIENT_SECRET");
   const sigHeader = req.headers.get("x-linkedstore-hmac-sha256");
-  if (!secret || !sigHeader || !(await verifyHmac(rawBody, secret, sigHeader))) {
+  if (!secret || !sigHeader || !(await verifyTiendanubeHmac(rawBody, secret, sigHeader))) {
     console.error("Firma de webhook inválida o ausente -- se rechaza el pedido.");
     return json({ ok: false, error: "Firma inválida" }, 401);
   }
@@ -122,26 +123,6 @@ Deno.serve(async (req: Request) => {
   console.log("Estrella sumada por compra web:", email, "pedido", orderId);
   return json({ ok: true, customer: email }, 200);
 });
-
-async function verifyHmac(rawBody: string, secret: string, signatureHex: string): Promise<boolean> {
-  try {
-    const enc = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      "raw",
-      enc.encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-    const sigBuf = await crypto.subtle.sign("HMAC", key, enc.encode(rawBody));
-    const computed = Array.from(new Uint8Array(sigBuf))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return computed.toLowerCase() === signatureHex.toLowerCase();
-  } catch {
-    return false;
-  }
-}
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
