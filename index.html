@@ -706,6 +706,8 @@
     isStaff = !!staffRes.data;
     switcherEl.hidden = !isStaff;
 
+    try { await supabase.functions.invoke("tn-backfill-stamps"); } catch (e) { /* no bloquea el login */ }
+
     setView("cliente");
   }
 
