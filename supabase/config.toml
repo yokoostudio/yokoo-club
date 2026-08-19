@@ -1,0 +1,88 @@
+
+[functions.tn-webhook-store-redact]
+enabled = true
+verify_jwt = false
+import_map = "./functions/tn-webhook-store-redact/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/tn-webhook-store-redact/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/tn-webhook-store-redact/*.html" ]
+
+[functions.tn-webhook-customers-redact]
+enabled = true
+verify_jwt = false
+import_map = "./functions/tn-webhook-customers-redact/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/tn-webhook-customers-redact/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/tn-webhook-customers-redact/*.html" ]
+
+[functions.tn-webhook-customers-data-request]
+enabled = true
+verify_jwt = false
+import_map = "./functions/tn-webhook-customers-data-request/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/tn-webhook-customers-data-request/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/tn-webhook-customers-data-request/*.html" ]
+
+[functions.tn-oauth-callback]
+enabled = true
+verify_jwt = false
+import_map = "./functions/tn-oauth-callback/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/tn-oauth-callback/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/tn-oauth-callback/*.html" ]
+
+[functions.tn-redeem]
+enabled = true
+verify_jwt = true
+import_map = "./functions/tn-redeem/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/tn-redeem/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/tn-redeem/*.html" ]
+
+[functions.tn-webhook-order-paid]
+enabled = true
+verify_jwt = false
+import_map = "./functions/tn-webhook-order-paid/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/tn-webhook-order-paid/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/tn-webhook-order-paid/*.html" ]
+
+[functions.tn-approve-request]
+enabled = true
+verify_jwt = true
+import_map = "./functions/tn-approve-request/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/tn-approve-request/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/tn-approve-request/*.html" ]
+
+[functions.tn-direct-stamp]
+enabled = true
+verify_jwt = true
+import_map = "./functions/tn-direct-stamp/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/tn-direct-stamp/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/tn-direct-stamp/*.html" ]
