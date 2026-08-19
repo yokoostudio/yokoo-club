@@ -97,6 +97,69 @@ export async function sendDataRequestReport(opts: {
   }
 }
 
+// Invita a sumarse al club a alguien que compró en la web sin estar
+// registrado todavía. El link ya lo deja logueado directo (magic link
+// generado por nosotros), no tiene que volver a escribir el mail.
+export async function sendInviteEmail(opts: {
+  toEmail: string;
+  displayName: string | null;
+  magicLink: string;
+}): Promise<boolean> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY no configurada -- no se manda la invitación.");
+    return false;
+  }
+
+  const name = opts.displayName || opts.toEmail.split("@")[0];
+  const html = renderInviteHtml({ name, magicLink: opts.magicLink });
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: FROM,
+        to: [opts.toEmail],
+        subject: "¡Gracias por tu compra! Sumate al Club Yokoo ⭐",
+        html,
+      }),
+    });
+    if (!res.ok) {
+      console.error("Error enviando invitación:", res.status, await res.text());
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("Excepción enviando invitación:", e);
+    return false;
+  }
+}
+
+function renderInviteHtml(opts: { name: string; magicLink: string }): string {
+  return `<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">
+    <tr><td style="text-align:center; padding-bottom:18px;">
+      <img src="https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/logo-yokoo-studio.png" width="190" alt="Yokoo Studio" style="display:block; margin:0 auto; width:190px; height:auto; max-width:100%;" />
+    </td></tr>
+    <tr><td style="background:#3a2115; border-radius:20px; padding:28px 24px; text-align:center;">
+      <p style="margin:0 0 6px; color:#f6efa3; font-size:14px;">Hola ${escapeHtml(opts.name)},</p>
+      <p style="margin:0 0 4px; color:#f6efa3; font-size:19px; font-weight:800; line-height:1.35;">¡Gracias por tu compra!</p>
+      <p style="margin:0 0 22px; color:rgba(246,239,163,.85); font-size:19px; font-weight:400; line-height:1.5;">Sumate al Club y empezá a coleccionar estrellas por cada compra.</p>
+      <p style="margin:0 0 22px; color:rgba(246,239,163,.7); font-size:13px;">Ya te guardamos esta compra -- tocá el botón para crear tu credencial y sumarla.</p>
+      <a href="${opts.magicLink}" style="display:inline-block; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:12px 22px; border-radius:999px;">Sumarme al club</a>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => (
     { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string

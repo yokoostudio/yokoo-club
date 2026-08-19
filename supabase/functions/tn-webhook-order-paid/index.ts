@@ -5,7 +5,7 @@
 // El payload que manda Tiendanube es chico -- { store_id, event, id } --
 // así que hay que pedirle el pedido completo a su API para sacar el mail.
 
-import { sendStampEmail } from "../_shared/notify.ts";
+import { sendStampEmail, sendInviteEmail } from "../_shared/notify.ts";
 import { verifyTiendanubeHmac } from "../_shared/tiendanube.ts";
 
 Deno.serve(async (req: Request) => {
@@ -80,7 +80,8 @@ Deno.serve(async (req: Request) => {
   );
   const customer = (await custRes.json())?.[0];
   if (!customer) {
-    return json({ ok: true, skipped: "cliente no registrado en la tarjeta" }, 200);
+    await inviteIfNeeded({ supabaseUrl, svcHeaders, email, order });
+    return json({ ok: true, skipped: "cliente no registrado -- se evaluó invitarlo" }, 200);
   }
 
   const goalRes = await fetch(`${supabaseUrl}/rest/v1/settings?key=eq.stamps_goal&select=value`, { headers: svcHeaders });
@@ -123,6 +124,63 @@ Deno.serve(async (req: Request) => {
   console.log("Estrella sumada por compra web:", email, "pedido", orderId);
   return json({ ok: true, customer: email }, 200);
 });
+
+// Cuando alguien compra sin estar registrado en la tarjeta: le mandamos
+// una invitación con un link de login ya armado (magic link generado por
+// nosotros), una sola vez por mail -- si sigue comprando sin registrarse,
+// no lo volvemos a invitar cada vez.
+async function inviteIfNeeded(opts: {
+  supabaseUrl: string;
+  svcHeaders: Record<string, string>;
+  email: string;
+  order: any;
+}) {
+  const { supabaseUrl, svcHeaders, email, order } = opts;
+
+  const seenRes = await fetch(
+    `${supabaseUrl}/rest/v1/pending_invites?email=eq.${encodeURIComponent(email)}&select=email`,
+    { headers: svcHeaders }
+  );
+  const alreadyInvited = ((await seenRes.json()) || []).length > 0;
+  if (alreadyInvited) return;
+
+  const displayName = String(order?.contact_name || order?.customer?.name || "").trim() || null;
+  const appUrl = Deno.env.get("APP_URL") || "http://localhost:8888";
+
+  const linkRes = await fetch(`${supabaseUrl}/auth/v1/admin/generate_link`, {
+    method: "POST",
+    headers: svcHeaders,
+    body: JSON.stringify({
+      type: "magiclink",
+      email,
+      redirect_to: appUrl,
+      options: {
+        data: displayName ? { display_name: displayName } : undefined,
+      },
+    }),
+  });
+
+  if (!linkRes.ok) {
+    console.error("Error generando el link de invitación", linkRes.status, await linkRes.text());
+    return;
+  }
+  const linkData = await linkRes.json();
+  const magicLink = linkData?.action_link;
+  if (!magicLink) {
+    console.error("generate_link no devolvió action_link");
+    return;
+  }
+
+  await sendInviteEmail({ toEmail: email, displayName, magicLink });
+
+  await fetch(`${supabaseUrl}/rest/v1/pending_invites`, {
+    method: "POST",
+    headers: { ...svcHeaders, Prefer: "return=minimal,resolution=merge-duplicates" },
+    body: JSON.stringify({ email }),
+  });
+
+  console.log("Invitación enviada a:", email);
+}
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {

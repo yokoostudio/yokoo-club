@@ -41,7 +41,14 @@ Deno.serve(async (req: Request) => {
     Authorization: `Bearer ${serviceRoleKey}`,
   };
 
-  // 1) Buscar si ese mail está registrado en la tarjeta.
+  // 1) Por las dudas, borrar también cualquier invitación pendiente guardada
+  // con ese mail (no depende de que esté registrado).
+  await fetch(`${supabaseUrl}/rest/v1/pending_invites?email=eq.${encodeURIComponent(email)}`, {
+    method: "DELETE",
+    headers: svcHeaders,
+  });
+
+  // 2) Buscar si ese mail está registrado en la tarjeta.
   const custRes = await fetch(
     `${supabaseUrl}/rest/v1/customers?email=eq.${encodeURIComponent(email)}&select=id`,
     { headers: svcHeaders }
@@ -51,7 +58,7 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true, skipped: "cliente no registrado en la tarjeta" }, 200);
   }
 
-  // 2) Borrar la cuenta de auth -- cascada a todo lo demás.
+  // 3) Borrar la cuenta de auth -- cascada a todo lo demás.
   const delRes = await fetch(`${supabaseUrl}/auth/v1/admin/users/${customer.id}`, {
     method: "DELETE",
     headers: svcHeaders,
