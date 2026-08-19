@@ -526,10 +526,19 @@
           <div id="reveal-code" hidden>
             <p class="reveal-label">Código de canje</p>
             <p class="reveal-prize" id="reveal-code-text">—</p>
-            <p class="panel-copy" style="margin:0;" id="reveal-code-note">Mostrá este código en el local para retirar tu premio.</p>
+            <p class="panel-copy" style="margin:0 0 .8rem;" id="reveal-code-note">Mostrá este código en el local para retirar tu premio.</p>
+            <button class="pill-btn pill-btn-outline pill-btn-small" id="copy-reveal-code" style="margin-bottom:.6rem;">Copiar código</button>
             <button class="pill-btn pill-btn-small" id="close-reveal">Listo</button>
           </div>
         </div>
+      </section>
+
+      <section class="panel" id="pending-redemption-panel" hidden>
+        <h2 class="panel-title">Premio sin retirar</h2>
+        <p class="panel-copy" id="pending-redemption-reward" style="margin-bottom:.3rem;">—</p>
+        <p class="reveal-prize" id="pending-redemption-code" style="text-align:center; margin:0 0 .8rem;">—</p>
+        <button class="pill-btn pill-btn-outline pill-btn-small" id="copy-pending-code" style="margin-bottom:.8rem;">Copiar código</button>
+        <p class="panel-copy" style="margin:0;">Mostrá este código en el local para retirarlo. Cuando lo validen, va a dejar de aparecer acá.</p>
       </section>
 
       <section class="panel">
@@ -747,6 +756,27 @@
     renderCliente();
   });
 
+  function copyToClipboard(text, btn) {
+    var original = btn.textContent;
+    function done(ok) {
+      btn.textContent = ok ? "¡Copiado!" : "No se pudo copiar";
+      setTimeout(function () { btn.textContent = original; }, 1800);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+    } else {
+      done(false);
+    }
+  }
+
+  document.getElementById("copy-reveal-code").addEventListener("click", function () {
+    copyToClipboard(document.getElementById("reveal-code-text").textContent, this);
+  });
+
+  document.getElementById("copy-pending-code").addEventListener("click", function () {
+    copyToClipboard(document.getElementById("pending-redemption-code").textContent, this);
+  });
+
   document.getElementById("request-btn").addEventListener("click", async function () {
     var session = (await supabase.auth.getSession()).data.session;
     if (!session) return;
@@ -784,6 +814,22 @@
     pillReward.hidden = false;
     pillReward.classList.toggle("is-ready", complete);
     pillReward.textContent = complete ? "Canjear" : "?";
+
+    var unclaimedRes = await supabase
+      .from("redemptions")
+      .select("redemption_code, reward_text")
+      .eq("customer_id", session.user.id)
+      .is("claimed_at", null)
+      .order("redeemed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    var unclaimed = unclaimedRes.data;
+    var pendingRedemptionPanel = document.getElementById("pending-redemption-panel");
+    pendingRedemptionPanel.hidden = !unclaimed;
+    if (unclaimed) {
+      document.getElementById("pending-redemption-reward").textContent = "Premio: " + unclaimed.reward_text;
+      document.getElementById("pending-redemption-code").textContent = unclaimed.redemption_code;
+    }
 
     var pendingRes = await supabase.from("stamp_requests").select("id").eq("customer_id", session.user.id).eq("status", "pending").maybeSingle();
     var pending = pendingRes.data;
