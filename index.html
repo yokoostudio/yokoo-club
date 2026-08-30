@@ -471,6 +471,8 @@
 
   .req-email { font-size: .92rem; font-weight: 700; }
   .req-date { font-size: .72rem; color: var(--cream-dim); }
+  .req-hint { font-size: .72rem; color: var(--cream-dim); margin-top: .1rem; }
+  .req-hint.is-warning { color: var(--caution); font-weight: 600; }
 
   .req-actions { display: flex; gap: .5rem; }
   .req-actions .pill-btn { flex: 1; width: auto; }
@@ -671,6 +673,11 @@
 
     <section class="panel">
       <h2 class="panel-title">Clientes registrados</h2>
+      <p class="panel-copy">Buscá por nombre o mail. "Descargar CSV" abre la lista completa como planilla (Excel, Google Sheets).</p>
+      <div class="row">
+        <input type="text" id="customers-search" placeholder="Buscar por nombre o mail" />
+        <button class="pill-btn pill-btn-outline" id="customers-csv-btn">Descargar CSV</button>
+      </div>
       <hr class="divider" />
       <div id="customers-list"></div>
     </section>
@@ -710,6 +717,7 @@
 
   var settings = { current_reward: "40% OFF", stamps_goal: GOAL_DEFAULT };
   var isStaff = false;
+  var allCustomers = [];
 
   async function loadSettings() {
     var res = await supabase.from("settings").select("*");
@@ -1047,10 +1055,27 @@
 
     var reqRes = await supabase
       .from("stamp_requests")
-      .select("id, requested_at, customers(email)")
+      .select("id, requested_at, customer_id, customers(email, current_stamps)")
       .eq("status", "pending")
       .order("requested_at", { ascending: true });
     var pending = reqRes.data || [];
+
+    // Para cada solicitud pendiente, traer también los últimos sellos ya
+    // registrados de ese cliente -- así se ve de una si la compra que
+    // originó el pedido ya sumó sola por la web (evita aprobar y duplicar).
+    var eventsByCustomer = {};
+    var pendingCustomerIds = pending.map(function (r) { return r.customer_id; });
+    if (pendingCustomerIds.length) {
+      var evRes = await supabase
+        .from("stamp_events")
+        .select("customer_id, source, order_id, created_at")
+        .in("customer_id", pendingCustomerIds)
+        .order("created_at", { ascending: false });
+      (evRes.data || []).forEach(function (e) {
+        if (!eventsByCustomer[e.customer_id]) eventsByCustomer[e.customer_id] = [];
+        eventsByCustomer[e.customer_id].push(e);
+      });
+    }
 
     var reqWrap = document.getElementById("requests-list");
     reqWrap.innerHTML = "";
@@ -1058,10 +1083,22 @@
       reqWrap.innerHTML = '<p class="empty-state">No hay solicitudes esperando aprobación.</p>';
     } else {
       pending.forEach(function (r) {
+        var events = eventsByCustomer[r.customer_id] || [];
+        var webEvent = events.filter(function (e) { return e.source === "web_order"; })[0];
+        var hintClass = "req-hint";
+        var hint;
+        if (webEvent) {
+          hintClass += " is-warning";
+          hint = "Ya tiene un sello de compra web (" + fmtDate(webEvent.created_at) + ") — revisá antes de aprobar para no duplicar.";
+        } else if (events.length) {
+          hint = "Sellos actuales: " + r.customers.current_stamps + "/" + settings.stamps_goal + " · último sello el " + fmtDate(events[0].created_at) + ".";
+        } else {
+          hint = "Todavía no tiene ningún sello registrado (sellos actuales: " + r.customers.current_stamps + ").";
+        }
         var row = document.createElement("div");
         row.className = "req-row";
         row.innerHTML =
-          '<div><div class="req-email">' + r.customers.email + '</div><div class="req-date">Pedido el ' + fmtDate(r.requested_at) + '</div></div>' +
+          '<div><div class="req-email">' + r.customers.email + '</div><div class="req-date">Pedido el ' + fmtDate(r.requested_at) + '</div><div class="' + hintClass + '">' + hint + '</div></div>' +
           '<div class="req-actions">' +
           '<button class="pill-btn pill-btn-small" data-approve="' + r.id + '">Aprobar</button>' +
           '<button class="pill-btn pill-btn-small pill-btn-outline pill-btn-caution" data-reject="' + r.id + '">Rechazar</button>' +
@@ -1104,28 +1141,82 @@
 
     var custRes = await supabase
       .from("customers")
-      .select("email, current_stamps, completed_cycles")
+      .select("email, display_name, current_stamps, completed_cycles, member_number")
       .order("email", { ascending: true });
-    var customers = custRes.data || [];
+    allCustomers = custRes.data || [];
+    renderCustomersList(document.getElementById("customers-search").value);
+    document.getElementById("customers-search").oninput = function () {
+      renderCustomersList(this.value);
+    };
+    document.getElementById("customers-csv-btn").onclick = downloadCustomersCsv;
+  }
 
+  function renderCustomersList(filterText) {
     var custWrap = document.getElementById("customers-list");
+    var q = (filterText || "").trim().toLowerCase();
+    var filtered = !q ? allCustomers : allCustomers.filter(function (c) {
+      return (c.email || "").toLowerCase().indexOf(q) !== -1 || (c.display_name || "").toLowerCase().indexOf(q) !== -1;
+    });
     custWrap.innerHTML = "";
-    if (!customers.length) {
+    if (!allCustomers.length) {
       custWrap.innerHTML = '<p class="empty-state">Todavía no hay clientes registrados.</p>';
-    } else {
-      customers.forEach(function (c) {
-        var row = document.createElement("div");
-        row.className = "cust-row";
-        var stars = "";
-        for (var i = 1; i <= settings.stamps_goal; i++) {
-          stars += '<img src="' + (i <= c.current_stamps ? STAR_FILLED_SRC : STAR_EMPTY_SRC) + '" alt="" />';
-        }
-        row.innerHTML =
-          '<div><div class="cust-email">' + c.email + '</div><div class="cust-meta">' + c.completed_cycles + ' premio' + (c.completed_cycles === 1 ? "" : "s") + ' canjeado' + (c.completed_cycles === 1 ? "" : "s") + '</div></div>' +
-          '<div><div class="cust-stars">' + stars + '</div><div class="cust-count">' + c.current_stamps + '/' + settings.stamps_goal + '</div></div>';
-        custWrap.appendChild(row);
-      });
+      return;
     }
+    if (!filtered.length) {
+      custWrap.innerHTML = '<p class="empty-state">Ningún cliente coincide con la búsqueda.</p>';
+      return;
+    }
+    filtered.forEach(function (c) {
+      var row = document.createElement("div");
+      row.className = "cust-row";
+      var stars = "";
+      for (var i = 1; i <= settings.stamps_goal; i++) {
+        stars += '<img src="' + (i <= c.current_stamps ? STAR_FILLED_SRC : STAR_EMPTY_SRC) + '" alt="" />';
+      }
+      var nameBit = c.display_name ? c.display_name + " · " : "";
+      var memberBit = c.member_number ? " · Member Nº" + String(c.member_number).padStart(3, "0") : "";
+      row.innerHTML =
+        '<div><div class="cust-email">' + nameBit + c.email + '</div><div class="cust-meta">' + c.completed_cycles + ' premio' + (c.completed_cycles === 1 ? "" : "s") + ' canjeado' + (c.completed_cycles === 1 ? "" : "s") + memberBit + '</div></div>' +
+        '<div><div class="cust-stars">' + stars + '</div><div class="cust-count">' + c.current_stamps + '/' + settings.stamps_goal + '</div></div>';
+      custWrap.appendChild(row);
+    });
+  }
+
+  function csvField(v) {
+    var s = String(v == null ? "" : v);
+    if (s.indexOf(",") !== -1 || s.indexOf('"') !== -1 || s.indexOf("\n") !== -1) {
+      s = '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function buildCustomersCsv() {
+    var header = ["email", "nombre", "sellos_actuales", "meta", "premios_canjeados", "numero_de_socio"];
+    var lines = [header.join(",")];
+    allCustomers.forEach(function (c) {
+      lines.push([
+        csvField(c.email),
+        csvField(c.display_name),
+        csvField(c.current_stamps),
+        csvField(settings.stamps_goal),
+        csvField(c.completed_cycles),
+        csvField(c.member_number)
+      ].join(","));
+    });
+    return lines.join("\r\n");
+  }
+
+  function downloadCustomersCsv() {
+    var bom = String.fromCharCode(0xFEFF);
+    var blob = new Blob([bom + buildCustomersCsv()], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "yokoo-clientes-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   // ---------- init ----------
