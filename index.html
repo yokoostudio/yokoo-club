@@ -20,6 +20,25 @@
     --bg-orb-2: #b89a34;
   }
 
+  /*
+    Tema invertido para cuando el cliente que está mirando su propia
+    credencial ya es Yokoo Member: se da vuelta la paleta entera (fondo
+    manteca -> café, paneles café -> manteca) para que el cambio se note
+    de verdad, no solo un detalle chico. Se activa con una clase en <body>
+    solo mientras se ve la pestaña Cliente de alguien que ya es socio.
+  */
+  body.member-theme {
+    --bg: #3a2115;
+    --card: #f5ee93;
+    --cream: #3a2115;
+    --cream-dim: rgba(58, 33, 21, .48);
+    --cream-ghost: rgba(58, 33, 21, .14);
+    --focus-page: #f5ee93;
+    --focus-panel: #3a2115;
+    --bg-orb: #5c3c24;
+    --bg-orb-2: #6e4a2c;
+  }
+
   * { box-sizing: border-box; }
 
   /*
@@ -158,7 +177,7 @@
   }
 
   .panel.is-member {
-    border-color: rgba(246, 239, 163, .4);
+    border-color: var(--cream-dim);
   }
 
   .panel-title {
@@ -700,7 +719,12 @@
     buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.view === view)); });
     viewCliente.hidden = view !== "cliente";
     viewNegocio.hidden = view !== "negocio";
-    if (view === "negocio") renderNegocio(); else renderCliente();
+    if (view === "negocio") {
+      document.body.classList.remove("member-theme");
+      renderNegocio();
+    } else {
+      renderCliente();
+    }
   }
 
   buttons.forEach(function (b) { b.addEventListener("click", function () { setView(b.dataset.view); }); });
@@ -750,6 +774,7 @@
 
   async function handleSession(session) {
     if (!session) {
+      document.body.classList.remove("member-theme");
       loginPanel.hidden = false;
       pendingPanel.hidden = true;
       cardArea.hidden = true;
@@ -847,6 +872,7 @@
     var shortCode = session.user.id.slice(0, 4).toUpperCase();
     var nameLine = (customer.display_name || customer.email.split("@")[0]).toUpperCase();
     var isMember = !!customer.member_number;
+    document.body.classList.toggle("member-theme", isMember);
     document.getElementById("credential-panel").classList.toggle("is-member", isMember);
     document.getElementById("member-badge").hidden = !isMember;
     document.getElementById("cred-sub").textContent = isMember
@@ -854,13 +880,19 @@
       : nameLine + " #" + shortCode;
 
     var goal = settings.stamps_goal;
+    // En el tema invertido de Yokoo Members, el panel pasa a ser claro,
+    // así que se intercambian los dos íconos: el que antes se veía "lleno"
+    // (crema) ahora tiene que ser el fantasma, y el "vacío" (marrón) pasa
+    // a ser el que se ve bien marcado sobre el panel claro.
+    var starOnSrc = isMember ? STAR_EMPTY_SRC : STAR_FILLED_SRC;
+    var starOffSrc = isMember ? STAR_FILLED_SRC : STAR_EMPTY_SRC;
     var row = document.getElementById("star-row");
     row.innerHTML = "";
     for (var i = 1; i <= goal; i++) {
       var filled = i <= customer.current_stamps;
       var el = document.createElement("div");
       el.className = "star";
-      el.innerHTML = '<img src="' + (filled ? STAR_FILLED_SRC : STAR_EMPTY_SRC) + '" alt="" />';
+      el.innerHTML = '<img src="' + (filled ? starOnSrc : starOffSrc) + '" alt="" />';
       row.appendChild(el);
     }
 
