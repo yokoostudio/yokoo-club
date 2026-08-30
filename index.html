@@ -163,6 +163,16 @@
     font-weight: 700;
   }
 
+  .members-eyebrow {
+    margin: 0 0 .5rem;
+    text-align: center;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--cream-dim);
+  }
+
   .divider {
     border: none;
     border-top: 1px solid var(--cream-dim);
@@ -210,6 +220,34 @@
     font-weight: 600;
     line-height: 1.4;
     text-wrap: balance;
+  }
+
+  .members-progress { margin-top: .9rem; }
+
+  .members-progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--cream-ghost);
+    overflow: hidden;
+  }
+
+  .members-progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: var(--cream);
+    transition: width .5s ease;
+  }
+
+  .members-progress-text {
+    margin: .55rem 0 0;
+    text-align: center;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--cream-dim);
   }
 
   .pill-reward {
@@ -480,6 +518,7 @@
 
     <!-- login -->
     <section class="panel" id="login-panel">
+      <p class="members-eyebrow">Bienvenido a Yokoo Members</p>
       <h2 class="panel-title">Ingresá a tu credencial</h2>
       <label class="field">
         Nombre y apellido
@@ -510,6 +549,11 @@
         <hr class="divider" />
 
         <div class="star-row" id="star-row"></div>
+
+        <div class="members-progress">
+          <div class="members-progress-track"><div class="members-progress-fill" id="members-progress-fill"></div></div>
+          <p class="members-progress-text" id="members-progress-text">Te faltan 5 estrellas para entrar a Yokoo Members</p>
+        </div>
 
         <hr class="divider" />
 
@@ -814,6 +858,23 @@
     pillReward.hidden = false;
     pillReward.classList.toggle("is-ready", complete);
     pillReward.textContent = complete ? "Canjear" : "?";
+
+    var progressPct = Math.min(100, Math.round((customer.current_stamps / goal) * 100));
+    document.getElementById("members-progress-fill").style.width = progressPct + "%";
+    var remaining = goal - customer.current_stamps;
+    var progressText;
+    if (complete) {
+      progressText = customer.completed_cycles >= 1
+        ? "¡Sumaste otro premio Yokoo Members!"
+        : "¡Ya sos parte de Yokoo Members!";
+    } else {
+      var noun = remaining === 1 ? "estrella" : "estrellas";
+      var verb = remaining === 1 ? "Te falta" : "Te faltan";
+      progressText = customer.completed_cycles >= 1
+        ? verb + " " + remaining + " " + noun + " para tu próximo premio Yokoo Members"
+        : verb + " " + remaining + " " + noun + " para entrar a Yokoo Members";
+    }
+    document.getElementById("members-progress-text").textContent = progressText;
 
     var unclaimedRes = await supabase
       .from("redemptions")
