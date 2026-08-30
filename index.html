@@ -154,6 +154,11 @@
     color: var(--cream);
     border-radius: 20px;
     padding: 1.6rem 1.4rem;
+    border: 1.5px solid transparent;
+  }
+
+  .panel.is-member {
+    border-color: rgba(246, 239, 163, .4);
   }
 
   .panel-title {
@@ -542,7 +547,8 @@
     <!-- credential card -->
     <div id="client-card-area" hidden class="gap">
 
-      <section class="panel">
+      <section class="panel" id="credential-panel">
+        <p class="members-eyebrow" id="member-badge" hidden>★ Yokoo Member</p>
         <h2 class="cred-title">Credencial del <em>Club</em></h2>
         <p class="cred-sub" id="cred-sub">Nombre #0000</p>
 
@@ -839,8 +845,13 @@
     if (!customer) return;
 
     var shortCode = session.user.id.slice(0, 4).toUpperCase();
-    document.getElementById("cred-sub").textContent =
-      (customer.display_name || customer.email.split("@")[0]).toUpperCase() + " #" + shortCode;
+    var nameLine = (customer.display_name || customer.email.split("@")[0]).toUpperCase();
+    var isMember = !!customer.member_number;
+    document.getElementById("credential-panel").classList.toggle("is-member", isMember);
+    document.getElementById("member-badge").hidden = !isMember;
+    document.getElementById("cred-sub").textContent = isMember
+      ? nameLine + " · YOKOO MEMBER Nº" + String(customer.member_number).padStart(3, "0")
+      : nameLine + " #" + shortCode;
 
     var goal = settings.stamps_goal;
     var row = document.getElementById("star-row");
