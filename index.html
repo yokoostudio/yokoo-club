@@ -713,6 +713,26 @@
     return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
   }
 
+  // Cuando una Edge Function devuelve un error (status no-2xx), supabase-js
+  // arma un res.error genérico ("Edge Function returned a non-2xx status
+  // code") y deja el cuerpo real de la respuesta (donde va el mensaje útil,
+  // ej. "No existe un cliente con ese mail") sin leer en res.error.context.
+  // Esta función intenta leer ese cuerpo real antes de caer al genérico.
+  async function functionErrorMessage(res) {
+    if (res.data && res.data.error) return res.data.error;
+    if (res.error) {
+      var ctx = res.error.context;
+      if (ctx && typeof ctx.json === "function") {
+        try {
+          var body = await ctx.clone().json();
+          if (body && body.error) return body.error;
+        } catch (e) { /* el cuerpo no era JSON, seguimos con el genérico */ }
+      }
+      return res.error.message;
+    }
+    return "Error desconocido";
+  }
+
   var settings = { current_reward: "40% OFF", stamps_goal: GOAL_DEFAULT };
   var isStaff = false;
   var allCustomers = [];
@@ -830,8 +850,7 @@
     btn.disabled = false;
     btn.textContent = "Confirmar y reiniciar tarjeta";
     if (res.error || !res.data || res.data.error) {
-      var msg = (res.data && res.data.error) || (res.error && res.error.message) || "Error desconocido";
-      alert("No se pudo canjear: " + msg);
+      alert("No se pudo canjear: " + await functionErrorMessage(res));
       return;
     }
     document.getElementById("reveal-code-text").textContent = res.data.code;
@@ -1002,7 +1021,7 @@
     if (!email || email.indexOf("@") === -1) { input.focus(); return; }
     var res = await supabase.functions.invoke("tn-direct-stamp", { body: { email: email } });
     if (res.error || (res.data && res.data.error)) {
-      alert((res.data && res.data.error) || res.error.message);
+      alert(await functionErrorMessage(res));
       return;
     }
     input.value = "";
@@ -1036,7 +1055,7 @@
   async function approve(id) {
     var res = await supabase.functions.invoke("tn-approve-request", { body: { requestId: id } });
     if (res.error || (res.data && res.data.error)) {
-      alert((res.data && res.data.error) || res.error.message);
+      alert(await functionErrorMessage(res));
       return;
     }
     renderNegocio();
