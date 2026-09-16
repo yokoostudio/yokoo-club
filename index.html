@@ -828,6 +828,10 @@
     switcherEl.hidden = !isStaff;
 
     try { await supabase.functions.invoke("tn-backfill-stamps"); } catch (e) { /* no bloquea el login */ }
+    // Tiene que llamarse DESPUÉS del backfill: decide si mandar el cupón de
+    // bienvenida mirando current_stamps, que el backfill puede haber
+    // actualizado si esta persona ya había comprado sin estar registrada.
+    try { await supabase.functions.invoke("tn-welcome-coupon"); } catch (e) { /* no bloquea el login */ }
 
     setView("cliente");
   }
