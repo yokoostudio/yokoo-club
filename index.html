@@ -670,6 +670,13 @@
     </section>
 
     <section class="panel">
+      <h2 class="panel-title">Reseñas</h2>
+      <p class="panel-copy">Las que dejan los clientes desde el mail que les llega a los 14 días de comprar. Sólo las que publiques salen en la web.</p>
+      <hr class="divider" />
+      <div id="reviews-list"></div>
+    </section>
+
+    <section class="panel">
       <h2 class="panel-title">Clientes registrados</h2>
       <p class="panel-copy">Buscá por nombre o mail. "Descargar CSV" abre la lista completa como planilla (Excel, Google Sheets).</p>
       <div class="row">
@@ -1170,6 +1177,75 @@
       renderCustomersList(this.value);
     };
     document.getElementById("customers-csv-btn").onclick = downloadCustomersCsv;
+
+    await renderReviews();
+  }
+
+  // ---------- reseñas ----------
+  // Llegan desde la web pública (resena.html) y quedan en "pending" hasta
+  // que se aprueban acá. Sólo las aprobadas salen en la tienda.
+  async function renderReviews() {
+    var wrap = document.getElementById("reviews-list");
+    var res = await supabase
+      .from("reviews")
+      .select("id, customer_name, customer_email, rating, comment, status, submitted_at")
+      .not("submitted_at", "is", null)
+      .order("submitted_at", { ascending: false });
+    var reviews = res.data || [];
+
+    wrap.innerHTML = "";
+    if (!reviews.length) {
+      wrap.innerHTML = '<p class="empty-state">Todavía no llegó ninguna reseña.</p>';
+      return;
+    }
+
+    reviews.forEach(function (r) {
+      var stars = "";
+      for (var i = 1; i <= 5; i++) stars += i <= r.rating ? "★" : "☆";
+
+      var estado = r.status === "approved" ? "Publicada" : (r.status === "rejected" ? "Oculta" : "Pendiente");
+      var hintClass = "req-hint" + (r.status === "pending" ? " is-warning" : "");
+
+      var acciones = "";
+      if (r.status !== "approved") {
+        acciones += '<button class="pill-btn pill-btn-small" data-review-approve="' + r.id + '">Publicar</button>';
+      }
+      if (r.status !== "rejected") {
+        acciones += '<button class="pill-btn pill-btn-small pill-btn-outline pill-btn-caution" data-review-reject="' + r.id + '">Ocultar</button>';
+      }
+
+      var row = document.createElement("div");
+      row.className = "req-row";
+      row.innerHTML =
+        '<div><div class="req-email">' + stars + '  ' + escapeHtml(r.customer_name || r.customer_email) + '</div>' +
+        '<div class="req-date">' + fmtDate(r.submitted_at) + '</div>' +
+        (r.comment ? '<div class="req-hint">“' + escapeHtml(r.comment) + '”</div>' : '') +
+        '<div class="' + hintClass + '">' + estado + '</div></div>' +
+        '<div class="req-actions">' + acciones + '</div>';
+      wrap.appendChild(row);
+    });
+
+    wrap.querySelectorAll("[data-review-approve]").forEach(function (b) {
+      b.addEventListener("click", function () { setReviewStatus(b.dataset.reviewApprove, "approved"); });
+    });
+    wrap.querySelectorAll("[data-review-reject]").forEach(function (b) {
+      b.addEventListener("click", function () { setReviewStatus(b.dataset.reviewReject, "rejected"); });
+    });
+  }
+
+  async function setReviewStatus(id, status) {
+    var res = await supabase.from("reviews").update({ status: status }).eq("id", id);
+    if (res.error) {
+      alert("No se pudo actualizar la reseña: " + res.error.message);
+      return;
+    }
+    await renderReviews();
+  }
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
   }
 
   function renderCustomersList(filterText) {
