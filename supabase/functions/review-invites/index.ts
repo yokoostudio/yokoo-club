@@ -27,6 +27,17 @@ Deno.serve(async (req: Request) => {
     return json({ error: "No autorizado" }, 401);
   }
 
+  // Modo de prueba: cuenta a cuántas compras les correspondería la
+  // invitación, sin escribir nada ni mandar un solo mail. Sirve para
+  // verificar el escaneo de pedidos sin molestar a clientes reales.
+  let dryRun = false;
+  try {
+    const body = await req.json();
+    dryRun = body?.dryRun === true;
+  } catch {
+    // sin body (el cron no manda ninguno): corrida normal
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const svcHeaders = {
@@ -84,7 +95,17 @@ Deno.serve(async (req: Request) => {
     if (orders.length < PAGE_SIZE) break;
   }
 
-  if (candidates.length === 0) return json({ ok: true, invited: 0 }, 200);
+  if (candidates.length === 0) return json({ ok: true, invited: 0, dryRun }, 200);
+
+  if (dryRun) {
+    return json({
+      ok: true,
+      dryRun: true,
+      invited: 0,
+      candidates: candidates.length,
+      ejemplo: candidates.slice(0, 3).map((c) => ({ orderId: c.orderId, email: maskEmail(c.email) })),
+    }, 200);
+  }
 
   let invited = 0;
   for (const cand of candidates) {
@@ -118,6 +139,14 @@ Deno.serve(async (req: Request) => {
   console.log("Invitaciones a reseñar enviadas:", invited, "de", candidates.length, "candidatas");
   return json({ ok: true, invited, candidates: candidates.length }, 200);
 });
+
+// Para el modo de prueba: no queremos volcar mails completos de clientes
+// reales en una respuesta de diagnóstico.
+function maskEmail(email: string): string {
+  const [user, domain] = email.split("@");
+  if (!domain) return "***";
+  return user.slice(0, 2) + "***@" + domain;
+}
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
