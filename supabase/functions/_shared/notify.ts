@@ -254,6 +254,46 @@ export async function sendReviewThanksEmail(opts: {
   return await sendViaResend(apiKey, opts.toEmail, `¡Gracias por tu opinión! Acá va tu ${opts.percent}% de descuento`, html, "agradecimiento de reseña");
 }
 
+// Aviso interno para el dueño: se manda después de cada tanda de
+// invitaciones a reseñar, para que sepa que salieron sin tener que entrar a
+// mirar. Sólo se manda cuando efectivamente salió al menos una.
+export async function sendReviewRunReport(opts: {
+  ownerEmail: string;
+  invited: number;
+  pending: number;
+  appUrl: string;
+}): Promise<boolean> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY no configurada -- no se manda el aviso de la tanda.");
+    return false;
+  }
+
+  const plural = opts.invited === 1 ? "invitación" : "invitaciones";
+  const pendientes = opts.pending === 1
+    ? "Tenés <strong style=\"color:#f6efa3;\">1 reseña</strong> esperando que la publiques."
+    : opts.pending > 1
+      ? `Tenés <strong style="color:#f6efa3;">${opts.pending} reseñas</strong> esperando que las publiques.`
+      : "Por ahora no hay reseñas esperando aprobación.";
+
+  const html = `<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">
+    <tr><td style="background:#3a2115; border-radius:20px; padding:26px 24px; text-align:center;">
+      <p style="margin:0 0 6px; color:rgba(246,239,163,.6); font-size:11px; text-transform:uppercase; letter-spacing:.09em;">Yokoo · aviso interno</p>
+      <p style="margin:0 0 16px; color:#f6efa3; font-size:20px; font-weight:800;">Se enviaron ${opts.invited} ${plural} a reseñar</p>
+      <p style="margin:0 0 22px; color:rgba(246,239,163,.85); font-size:14px; line-height:1.5;">${pendientes}</p>
+      <a href="${opts.appUrl}" style="display:inline-block; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:12px 22px; border-radius:999px;">Ir al panel</a>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  return await sendViaResend(apiKey, opts.ownerEmail, `Se enviaron ${opts.invited} ${plural} a reseñar`, html, "aviso de tanda de reseñas");
+}
+
 async function sendViaResend(apiKey: string, to: string, subject: string, html: string, label: string): Promise<boolean> {
   try {
     const res = await fetch("https://api.resend.com/emails", {

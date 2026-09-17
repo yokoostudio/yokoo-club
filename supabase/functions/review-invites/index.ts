@@ -5,7 +5,10 @@
 // No usa verify_jwt (la llama el cron de la base, no un usuario logueado):
 // se protege con un secreto propio en el header x-yokoo-cron-secret.
 
-import { sendReviewInviteEmail } from "../_shared/notify.ts";
+import { sendReviewInviteEmail, sendReviewRunReport } from "../_shared/notify.ts";
+
+// A dónde va el aviso interno de "salió la tanda".
+const OWNER_EMAIL = "jcdibastiano@gmail.com";
 
 // Se invita a las compras de entre 14 y 21 días atrás. La ventana es ancha a
 // propósito: si un día el cron falla, esas compras se recuperan al día
@@ -74,6 +77,14 @@ Deno.serve(async (req: Request) => {
       displayName: null,
       reviewUrl: `${appUrl}/resena.html?t=${token}`,
     });
+    // La prueba también dispara el aviso interno, así se puede verificar ese
+    // circuito sin esperar a la tanda real.
+    const pendingTestRes = await fetch(
+      `${supabaseUrl}/rest/v1/reviews?status=eq.pending&submitted_at=not.is.null&select=id`,
+      { headers: svcHeaders }
+    );
+    const pendingTest = ((await pendingTestRes.json()) || []).length;
+    await sendReviewRunReport({ ownerEmail: OWNER_EMAIL, invited: 1, pending: pendingTest, appUrl });
     return json({ ok: true, testEmail: maskEmail(testEmail), sent }, 200);
   }
 
@@ -163,6 +174,17 @@ Deno.serve(async (req: Request) => {
       reviewUrl: `${appUrl}/resena.html?t=${token}`,
     });
     if (ok) invited++;
+  }
+
+  // Aviso interno para Juan, sólo si efectivamente salió alguna invitación
+  // (si no hay compras para invitar, no se lo molesta con un mail vacío).
+  if (invited > 0) {
+    const pendingRes = await fetch(
+      `${supabaseUrl}/rest/v1/reviews?status=eq.pending&submitted_at=not.is.null&select=id`,
+      { headers: { ...svcHeaders, Prefer: "count=exact" } }
+    );
+    const pending = ((await pendingRes.json()) || []).length;
+    await sendReviewRunReport({ ownerEmail: OWNER_EMAIL, invited, pending, appUrl });
   }
 
   console.log("Invitaciones a reseñar enviadas:", invited, "de", candidates.length, "candidatas");
