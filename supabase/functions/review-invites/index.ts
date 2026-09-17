@@ -31,9 +31,14 @@ Deno.serve(async (req: Request) => {
   // invitación, sin escribir nada ni mandar un solo mail. Sirve para
   // verificar el escaneo de pedidos sin molestar a clientes reales.
   let dryRun = false;
+  // testEmail: manda UNA invitación real a esa casilla y nada más -- sirve
+  // para recorrer el circuito completo (invitación -> reseña -> cupón) sin
+  // tocar clientes reales ni esperar al envío automático.
+  let testEmail = "";
   try {
     const body = await req.json();
     dryRun = body?.dryRun === true;
+    testEmail = String(body?.testEmail || "").trim().toLowerCase();
   } catch {
     // sin body (el cron no manda ninguno): corrida normal
   }
@@ -47,6 +52,30 @@ Deno.serve(async (req: Request) => {
   };
 
   const appUrl = (Deno.env.get("APP_URL") || "http://localhost:8888").replace(/\/+$/, "");
+
+  if (testEmail) {
+    const token = crypto.randomUUID().replace(/-/g, "");
+    const insertRes = await fetch(`${supabaseUrl}/rest/v1/reviews`, {
+      method: "POST",
+      headers: { ...svcHeaders, Prefer: "return=minimal" },
+      body: JSON.stringify({
+        order_id: "PRUEBA-" + Date.now(),
+        customer_email: testEmail,
+        customer_name: null,
+        token,
+        invited_at: new Date().toISOString(),
+      }),
+    });
+    if (!insertRes.ok) {
+      return json({ ok: false, error: "No se pudo crear la fila de prueba" }, 500);
+    }
+    const sent = await sendReviewInviteEmail({
+      toEmail: testEmail,
+      displayName: null,
+      reviewUrl: `${appUrl}/resena.html?t=${token}`,
+    });
+    return json({ ok: true, testEmail: maskEmail(testEmail), sent }, 200);
+  }
 
   const connRes = await fetch(
     `${supabaseUrl}/rest/v1/tiendanube_connection?select=store_id,access_token&limit=1`,
