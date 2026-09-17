@@ -100,6 +100,22 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/tn-welcome-coupon/deno.json"
 entrypoint = "./functions/tn-welcome-coupon/index.ts"
+
+# La llama el cron de la base (no un usuario logueado): se protege con el
+# secreto propio CRON_SECRET en el header x-yokoo-cron-secret.
+[functions.review-invites]
+enabled = true
+verify_jwt = false
+import_map = "./functions/review-invites/deno.json"
+entrypoint = "./functions/review-invites/index.ts"
+
+# La llama la página pública de reseñas: autoriza el token único de la
+# compra, que sólo llegó al mail de esa persona.
+[functions.review-submit]
+enabled = true
+verify_jwt = false
+import_map = "./functions/review-submit/deno.json"
+entrypoint = "./functions/review-submit/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/tn-backfill-stamps/*.html" ]

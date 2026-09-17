@@ -1,0 +1,10 @@
+use strict;
+use warnings;
+local $/;
+my $sql = <STDIN>;
+$sql =~ s/\\/\\\\/g;
+$sql =~ s/"/\\"/g;
+$sql =~ s/\r//g;
+$sql =~ s/\n/\\n/g;
+$sql =~ s/\t/\\t/g;
+print '{"query":"' . $sql . '"}';

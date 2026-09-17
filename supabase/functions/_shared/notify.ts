@@ -206,6 +206,124 @@ function renderWelcomeCouponHtml(opts: { name: string; code: string; percent: st
 </html>`;
 }
 
+// Invitación a dejar una reseña, ~14 días después de la compra (ver
+// review-invites). El link ya lleva el token único de esa compra, así que
+// no hace falta que la persona se loguee ni escriba nada para entrar.
+export async function sendReviewInviteEmail(opts: {
+  toEmail: string;
+  displayName: string | null;
+  reviewUrl: string;
+}): Promise<boolean> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY no configurada -- no se manda la invitación a reseñar.");
+    return false;
+  }
+
+  const name = opts.displayName || opts.toEmail.split("@")[0];
+  const html = renderReviewInviteHtml({ name, reviewUrl: opts.reviewUrl });
+
+  return await sendViaResend(apiKey, opts.toEmail, "¿Cómo fue tu experiencia con Yokoo?", html, "invitación a reseñar");
+}
+
+// Agradecimiento + cupón (y la estrella, si corresponde) apenas la persona
+// envía su reseña (ver review-submit).
+export async function sendReviewThanksEmail(opts: {
+  toEmail: string;
+  displayName: string | null;
+  code: string;
+  percent: string;
+  starAwarded: boolean;
+  appUrl: string;
+}): Promise<boolean> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY no configurada -- no se manda el agradecimiento.");
+    return false;
+  }
+
+  const name = opts.displayName || opts.toEmail.split("@")[0];
+  const html = renderReviewThanksHtml({
+    name,
+    code: opts.code,
+    percent: opts.percent,
+    starAwarded: opts.starAwarded,
+    appUrl: opts.appUrl,
+  });
+
+  return await sendViaResend(apiKey, opts.toEmail, `¡Gracias por tu opinión! Acá va tu ${opts.percent}% de descuento`, html, "agradecimiento de reseña");
+}
+
+async function sendViaResend(apiKey: string, to: string, subject: string, html: string, label: string): Promise<boolean> {
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from: FROM, to: [to], subject, html }),
+    });
+    if (!res.ok) {
+      console.error(`Error enviando ${label}:`, res.status, await res.text());
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error(`Excepción enviando ${label}:`, e);
+    return false;
+  }
+}
+
+function renderReviewInviteHtml(opts: { name: string; reviewUrl: string }): string {
+  return `<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">
+    <tr><td style="text-align:center; padding-bottom:18px;">
+      <img src="https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/logo-yokoo-studio.png" width="190" alt="Yokoo Studio" style="display:block; margin:0 auto; width:190px; height:auto; max-width:100%;" />
+    </td></tr>
+    <tr><td style="background:#3a2115; border-radius:20px; padding:28px 24px; text-align:center;">
+      <p style="margin:0 0 6px; color:#f6efa3; font-size:14px;">Hola ${escapeHtml(opts.name)},</p>
+      <p style="margin:0 0 16px; color:#f6efa3; font-size:20px; font-weight:800; line-height:1.35;">¿Cómo fue tu experiencia con Yokoo?</p>
+      <p style="margin:0 0 22px; color:rgba(246,239,163,.85); font-size:14px; line-height:1.5;">Contanos qué te pareció: nos ayuda un montón y ayuda a quien todavía no nos conoce. Te lleva menos de un minuto.</p>
+      <p style="margin:0 0 22px; font-size:26px; letter-spacing:4px; color:#f6efa3;">★★★★★</p>
+      <a href="${opts.reviewUrl}" style="display:inline-block; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:12px 22px; border-radius:999px;">Dejar mi opinión</a>
+      <p style="margin:20px 0 0; color:rgba(246,239,163,.7); font-size:12.5px; line-height:1.5;">Al enviarla te regalamos un <strong style="color:#f6efa3;">10% de descuento</strong> para tu próxima compra. Y si sos parte de Yokoo Members, sumás además una estrella ⭐</p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+function renderReviewThanksHtml(opts: { name: string; code: string; percent: string; starAwarded: boolean; appUrl: string }): string {
+  const starBlock = opts.starAwarded
+    ? `<p style="margin:18px 0 0; color:rgba(246,239,163,.75); font-size:12.5px;">Además sumaste <strong style="color:#f6efa3;">una estrella ⭐</strong> en tu tarjeta Yokoo Members.</p>`
+    : `<p style="margin:18px 0 0; color:rgba(246,239,163,.75); font-size:12.5px;">Sumate a Yokoo Members y empezá a juntar estrellas en cada compra.</p>`;
+
+  return `<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">
+    <tr><td style="text-align:center; padding-bottom:18px;">
+      <img src="https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/logo-yokoo-studio.png" width="190" alt="Yokoo Studio" style="display:block; margin:0 auto; width:190px; height:auto; max-width:100%;" />
+    </td></tr>
+    <tr><td style="background:#3a2115; border-radius:20px; padding:28px 24px; text-align:center;">
+      <p style="margin:0 0 6px; color:#f6efa3; font-size:14px;">Hola ${escapeHtml(opts.name)},</p>
+      <p style="margin:0 0 18px; color:#f6efa3; font-size:20px; font-weight:800; line-height:1.35;">¡Gracias por tu opinión!</p>
+      <p style="margin:0 0 22px; color:rgba(246,239,163,.85); font-size:14px; line-height:1.5;">Acá va tu ${opts.percent}% de descuento para tu próxima compra.</p>
+      <p style="margin:0 0 8px; color:rgba(246,239,163,.6); font-size:11px; text-transform:uppercase; letter-spacing:.08em;">Tu código</p>
+      <p style="margin:0 0 22px; color:#f6efa3; font-size:26px; font-weight:800; letter-spacing:2px;">${escapeHtml(opts.code)}</p>
+      <a href="${opts.appUrl}" style="display:inline-block; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:12px 22px; border-radius:999px;">Ver mi credencial</a>
+      ${starBlock}
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 function renderInviteHtml(opts: { name: string; magicLink: string }): string {
   return `<!doctype html>
 <html lang="es">

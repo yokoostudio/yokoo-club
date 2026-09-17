@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Yokoo — Dejá tu opinión</title>
+<style>
+  :root {
+    --bg: #f5ee93;
+    --card: #3a2115;
+    --cream: #f6efa3;
+    --cream-dim: rgba(246, 239, 163, .48);
+    --cream-ghost: rgba(246, 239, 163, .14);
+    --caution: #d98a68;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 28px 18px calc(28px + env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--card);
+    font-family: "Helvetica Now Display", Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wrap { width: 100%; max-width: 420px; }
+
+  .wordmark {
+    display: block;
+    width: 190px;
+    max-width: 60%;
+    height: auto;
+    margin: 0 auto 22px;
+  }
+
+  .panel {
+    background: var(--card);
+    color: var(--cream);
+    border-radius: 24px;
+    padding: 28px 24px;
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+    font-size: 21px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  .sub {
+    margin: 0 0 22px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--cream-dim);
+  }
+
+  /* ---------- estrellas ---------- */
+  .stars {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 0 0 20px;
+  }
+  .star {
+    background: none;
+    border: 0;
+    padding: 2px;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 32px;
+    color: var(--cream-ghost);
+    transition: color .15s ease, transform .12s ease;
+  }
+  .star:hover { transform: scale(1.12); }
+  .star.on { color: var(--cream); }
+  .star:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; border-radius: 6px; }
+
+  /* ---------- campos ---------- */
+  label {
+    display: block;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--cream-dim);
+    margin: 0 0 6px;
+  }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    background: rgba(246, 239, 163, .08);
+    border: 1px solid var(--cream-ghost);
+    border-radius: 14px;
+    color: var(--cream);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 12px 14px;
+    margin: 0 0 16px;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  textarea::placeholder, input::placeholder { color: rgba(246, 239, 163, .35); }
+  textarea:focus, input:focus { outline: none; border-color: var(--cream); }
+
+  button.primary {
+    width: 100%;
+    height: 50px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--cream);
+    color: var(--card);
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: filter .2s ease, transform .12s ease;
+  }
+  button.primary:hover:not(:disabled) { filter: brightness(1.06); }
+  button.primary:active:not(:disabled) { transform: scale(.985); }
+  button.primary:disabled { opacity: .55; cursor: default; }
+
+  .msg {
+    margin: 14px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--caution);
+    min-height: 1em;
+  }
+
+  /* ---------- pantalla de gracias ---------- */
+  .code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin: 0 0 6px;
+  }
+  .code-label {
+    margin: 0 0 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--cream-dim);
+  }
+  .foot {
+    margin: 18px 0 0;
+    font-size: 12px;
+    color: var(--cream-dim);
+    line-height: 1.5;
+  }
+  .foot a { color: var(--cream); }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img class="wordmark"
+       src="https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/logo-yokoo-studio.png"
+       alt="Yokoo Studio" />
+
+  <!-- Formulario -->
+  <section class="panel" id="form-panel" hidden>
+    <h1>¿Cómo fue tu experiencia?</h1>
+    <p class="sub">Contanos qué te pareció Yokoo. Al enviarla te mandamos un <strong style="color:var(--cream)">10% de descuento</strong> para tu próxima compra.</p>
+
+    <div class="stars" id="stars" role="radiogroup" aria-label="Puntuación"></div>
+
+    <label for="comment">Tu opinión</label>
+    <textarea id="comment" placeholder="Qué te pareció la prenda, la calidad, el envío..."></textarea>
+
+    <label for="name">Tu nombre (así aparece en la web)</label>
+    <input type="text" id="name" placeholder="Nombre y apellido" maxlength="80" />
+
+    <button class="primary" id="submit">Enviar mi opinión</button>
+    <p class="msg" id="msg"></p>
+  </section>
+
+  <!-- Gracias -->
+  <section class="panel" id="thanks-panel" hidden>
+    <h1>¡Gracias por tu opinión!</h1>
+    <p class="sub">Ya la recibimos. Acá va tu descuento para la próxima.</p>
+    <p class="code-label">Tu código</p>
+    <p class="code" id="thanks-code">—</p>
+    <p class="foot" id="thanks-star"></p>
+    <p class="foot">También te lo mandamos por mail. <a href="https://yokoo.com.ar">Volver a la tienda</a></p>
+  </section>
+
+  <!-- Error de link -->
+  <section class="panel" id="error-panel" hidden>
+    <h1>Este link no es válido</h1>
+    <p class="sub" id="error-text">Puede que haya expirado o que ya hayas dejado tu opinión.</p>
+    <p class="foot"><a href="https://yokoo.com.ar">Volver a la tienda</a></p>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SUPABASE_URL = "https://givnsohzgsugvrfuftcm.supabase.co";
+  var SUPABASE_ANON_KEY = "sb_publishable_tOp1euqy5e01qvxt3FHuZA_Zn6fAfxS";
+
+  var token = new URLSearchParams(location.search).get("t") || "";
+  var rating = 0;
+
+  var formPanel = document.getElementById("form-panel");
+  var thanksPanel = document.getElementById("thanks-panel");
+  var errorPanel = document.getElementById("error-panel");
+  var starsEl = document.getElementById("stars");
+  var msgEl = document.getElementById("msg");
+  var submitBtn = document.getElementById("submit");
+
+  if (!token) {
+    errorPanel.hidden = false;
+    return;
+  }
+  formPanel.hidden = false;
+
+  // ---------- estrellas ----------
+  for (var i = 1; i <= 5; i++) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "star";
+    b.textContent = "★";
+    b.dataset.value = String(i);
+    b.setAttribute("role", "radio");
+    b.setAttribute("aria-checked", "false");
+    b.setAttribute("aria-label", i + (i === 1 ? " estrella" : " estrellas"));
+    starsEl.appendChild(b);
+  }
+
+  starsEl.addEventListener("click", function (e) {
+    var btn = e.target.closest(".star");
+    if (!btn) return;
+    rating = parseInt(btn.dataset.value, 10);
+    paintStars();
+  });
+
+  function paintStars() {
+    Array.prototype.forEach.call(starsEl.children, function (el) {
+      var on = parseInt(el.dataset.value, 10) <= rating;
+      el.classList.toggle("on", on);
+      el.setAttribute("aria-checked", on ? "true" : "false");
+    });
+  }
+
+  // ---------- envío ----------
+  submitBtn.addEventListener("click", async function () {
+    if (!rating) {
+      msgEl.textContent = "Elegí de 1 a 5 estrellas.";
+      return;
+    }
+    msgEl.textContent = "";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enviando...";
+
+    try {
+      var res = await fetch(SUPABASE_URL + "/functions/v1/review-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+        body: JSON.stringify({
+          token: token,
+          rating: rating,
+          comment: document.getElementById("comment").value,
+          name: document.getElementById("name").value
+        })
+      });
+      var data = await res.json();
+
+      if (!res.ok) {
+        msgEl.textContent = data.error || "No pudimos enviar tu opinión. Probá de nuevo.";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Enviar mi opinión";
+        return;
+      }
+
+      formPanel.hidden = true;
+      thanksPanel.hidden = false;
+      document.getElementById("thanks-code").textContent = data.code || "—";
+      document.getElementById("thanks-star").textContent = data.starAwarded
+        ? "Además sumaste una estrella ⭐ en tu tarjeta Yokoo Members."
+        : "";
+    } catch (e) {
+      msgEl.textContent = "Hubo un problema de conexión. Probá de nuevo.";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Enviar mi opinión";
+    }
+  });
+})();
+</script>
+</body>
+</html>
