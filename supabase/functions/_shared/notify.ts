@@ -422,3 +422,239 @@ function renderEmailHtml(opts: {
 </body>
 </html>`;
 }
+
+// ---------------------------------------------------------------------------
+// Campañas a toda la lista del Club (lanzamientos, CyberMonday, etc.)
+//
+// A diferencia del resto de este archivo, acá el CONTENIDO no está en el
+// código: llega como parámetro desde campaign-send. La plantilla de marca sí
+// vive acá, así todas las campañas salen con la misma cara.
+// ---------------------------------------------------------------------------
+
+export type CampaignContent = {
+  headline: string;
+  paragraphs: string[];
+  // Varias fotos: con una queda a lo ancho; con dos o más se arma una grilla de
+  // a dos por fila. Si el total es impar, la primera va grande arriba y el
+  // resto de a pares, que es como se ve una colección de ropa.
+  images?: string[];
+  // Compatibilidad: una sola foto. Si vienen las dos, mandan `images`.
+  imageUrl?: string;
+  imageAlt?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+  footnote?: string;
+};
+
+export type CampaignRecipient = {
+  email: string;
+  name: string;
+  unsubUrl: string;
+};
+
+// Resend acepta hasta 100 mails por llamada a /emails/batch. Mandar de a uno
+// no sirve acá: el rate limit de la API es de pocas requests por segundo y
+// 170 mails sueltos se pasarían del tiempo máximo de la función.
+const BATCH_SIZE = 100;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Las fotos van en una tabla anidada, no en CSS grid ni flex: Outlook de
+// escritorio no soporta ninguno de los dos y rompe el layout. Mismo motivo por
+// el que el ancho va también en el atributo width= y no sólo en el style.
+function renderImages(urls: string[], alt: string): string {
+  const pics = urls.filter((u) => u && String(u).trim());
+  if (pics.length === 0) return "";
+
+  const safeAlt = escapeHtml(alt);
+  const img = (src: string, w: number) =>
+    `<img src="${src}" alt="${safeAlt}" width="${w}" style="display:block; width:100%; max-width:${w}px; height:auto; border-radius:14px;" />`;
+
+  const rows: string[] = [];
+  let i = 0;
+
+  // Cantidad impar: la primera va grande arriba y el resto de a pares, así no
+  // queda nunca una foto sola y desbalanceada al final.
+  if (pics.length % 2 === 1) {
+    rows.push(`<tr><td colspan="2" style="padding:0 0 10px;">${img(pics[0], 420)}</td></tr>`);
+    i = 1;
+  }
+
+  for (; i < pics.length; i += 2) {
+    rows.push(
+      `<tr>` +
+        `<td width="50%" style="padding:0 5px 10px 0;">${img(pics[i], 205)}</td>` +
+        `<td width="50%" style="padding:0 0 10px 5px;">${img(pics[i + 1], 205)}</td>` +
+      `</tr>`,
+    );
+  }
+
+  return `<tr><td style="padding-bottom:8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">${rows.join("")}</table>
+    </td></tr>`;
+}
+
+export function renderCampaignHtml(opts: CampaignContent & { name: string; unsubUrl: string }): string {
+  const paragraphs = opts.paragraphs
+    .map(
+      (p) =>
+        `<p style="margin:0 0 14px; color:rgba(246,239,163,.88); font-size:15px; line-height:1.55;">${escapeHtml(p)}</p>`,
+    )
+    .join("");
+
+  const image = renderImages(
+    opts.images && opts.images.length ? opts.images : opts.imageUrl ? [opts.imageUrl] : [],
+    opts.imageAlt || "",
+  );
+
+  const cta =
+    opts.ctaText && opts.ctaUrl
+      ? `<a href="${opts.ctaUrl}" style="display:inline-block; margin-top:8px; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:13px 24px; border-radius:999px;">${escapeHtml(opts.ctaText)}</a>`
+      : "";
+
+  const footnote = opts.footnote
+    ? `<p style="margin:16px 0 0; color:rgba(246,239,163,.6); font-size:12.5px; line-height:1.5;">${escapeHtml(opts.footnote)}</p>`
+    : "";
+
+  return `<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">
+    <tr><td style="text-align:center; padding-bottom:18px;">
+      <img src="https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/logo-yokoo-studio.png" width="190" alt="Yokoo Studio" style="display:block; margin:0 auto; width:190px; height:auto; max-width:100%;" />
+    </td></tr>
+    ${image}
+    <tr><td style="background:#3a2115; border-radius:20px; padding:28px 24px; text-align:center;">
+      ${opts.name ? `<p style="margin:0 0 6px; color:rgba(246,239,163,.75); font-size:14px;">Hola ${escapeHtml(opts.name)},</p>` : ""}
+      <p style="margin:0 0 16px; color:#f6efa3; font-size:21px; font-weight:800; line-height:1.3;">${escapeHtml(opts.headline)}</p>
+      ${paragraphs}
+      ${cta}
+      ${footnote}
+    </td></tr>
+    <tr><td style="padding:18px 8px 0; text-align:center;">
+      <p style="margin:0; color:rgba(58,33,21,.6); font-size:11.5px; line-height:1.5;">
+        Recibís esto porque estás registrado/a en Yokoo Club.<br />
+        <a href="${opts.unsubUrl}" style="color:rgba(58,33,21,.75);">No quiero recibir más novedades</a>
+      </p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+// Versión en texto plano del mail. Va junto con el HTML (no en lugar de).
+// Un mail que es sólo HTML puntúa peor en los filtros de spam y de pestañas:
+// mandar las dos versiones es de las pocas cosas que dependen de nosotros.
+function renderCampaignText(opts: CampaignContent & { name: string; unsubUrl: string }): string {
+  const lineas: string[] = [];
+  if (opts.name) lineas.push(`Hola ${opts.name},`, "");
+  lineas.push(opts.headline, "");
+  for (const p of opts.paragraphs) lineas.push(p, "");
+  if (opts.ctaText && opts.ctaUrl) lineas.push(`${opts.ctaText}: ${opts.ctaUrl}`, "");
+  if (opts.footnote) lineas.push(opts.footnote, "");
+  lineas.push(
+    "--",
+    "Recibís esto porque estás registrado/a en Yokoo Club.",
+    `Para no recibir más novedades: ${opts.unsubUrl}`,
+  );
+  return lineas.join("\n");
+}
+
+// Manda la campaña en tandas de 100. Devuelve qué mails salieron y cuáles no,
+// para que campaign-send registre en campaign_sends SÓLO los que salieron: si
+// una tanda falla, volver a correr la campaña reintenta nada más que esos.
+export async function sendCampaignBatch(
+  apiKey: string,
+  subject: string,
+  content: CampaignContent,
+  recipients: CampaignRecipient[],
+): Promise<{ sent: string[]; failed: string[] }> {
+  const sent: string[] = [];
+  const failed: string[] = [];
+
+  for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+    const chunk = recipients.slice(i, i + BATCH_SIZE);
+    const payload = chunk.map((r) => ({
+      from: FROM,
+      to: [r.email],
+      subject,
+      html: renderCampaignHtml({ ...content, name: r.name, unsubUrl: r.unsubUrl }),
+      text: renderCampaignText({ ...content, name: r.name, unsubUrl: r.unsubUrl }),
+      headers: {
+        // Gmail y Outlook exigen las dos para mensajes masivos. La segunda
+        // hace que el botón "Cancelar suscripción" del cliente de mail pegue
+        // un POST a la misma URL, sin que la persona tenga que abrir nada.
+        "List-Unsubscribe": `<${r.unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    }));
+
+    // Resend limita a pocas requests por segundo: entre tanda y tanda hay que
+    // esperar. Sin esto, la segunda tanda puede volver con 429 y perderse 100
+    // mails de una (ya pasó en una prueba).
+    if (i > 0) await sleep(1000);
+
+    let ok = false;
+    for (let intento = 1; intento <= 2 && !ok; intento++) {
+      try {
+        const res = await fetch("https://api.resend.com/emails/batch", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          ok = true;
+        } else {
+          const detalle = await res.text();
+          console.error(`Error en tanda de campaña (intento ${intento}):`, res.status, detalle);
+          // 429 = rate limit, 5xx = problema pasajero de Resend: vale reintentar.
+          // Un 4xx que no sea 429 es un payload mal armado y reintentarlo no arregla nada.
+          if (intento === 1 && (res.status === 429 || res.status >= 500)) await sleep(3000);
+          else break;
+        }
+      } catch (e) {
+        console.error(`Excepción en tanda de campaña (intento ${intento}):`, e);
+        if (intento === 1) await sleep(3000);
+      }
+    }
+
+    for (const r of chunk) (ok ? sent : failed).push(r.email);
+  }
+
+  return { sent, failed };
+}
+
+// Aviso interno al dueño cuando termina una campaña, mismo criterio que
+// sendReviewRunReport: saber que salió sin tener que abrir el panel.
+export async function sendCampaignReport(opts: {
+  apiKey: string;
+  ownerEmail: string;
+  slug: string;
+  subject: string;
+  sent: number;
+  failed: number;
+  skipped: number;
+}): Promise<boolean> {
+  const html = `<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">
+    <tr><td style="background:#3a2115; border-radius:20px; padding:26px 24px;">
+      <p style="margin:0 0 14px; color:#f6efa3; font-size:19px; font-weight:800;">Campaña enviada</p>
+      <p style="margin:0 0 6px; color:rgba(246,239,163,.85); font-size:14px;">Campaña: <b>${escapeHtml(opts.slug)}</b></p>
+      <p style="margin:0 0 6px; color:rgba(246,239,163,.85); font-size:14px;">Asunto: ${escapeHtml(opts.subject)}</p>
+      <p style="margin:14px 0 0; color:#f6efa3; font-size:15px;">✅ ${opts.sent} enviados</p>
+      ${opts.failed ? `<p style="margin:6px 0 0; color:#ffb4a2; font-size:15px;">⚠️ ${opts.failed} fallaron — volvé a correr la campaña, sólo reintenta esos</p>` : ""}
+      ${opts.skipped ? `<p style="margin:6px 0 0; color:rgba(246,239,163,.6); font-size:13px;">${opts.skipped} salteados (ya la habían recibido o están dados de baja)</p>` : ""}
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  return await sendViaResend(opts.apiKey, opts.ownerEmail, `Campaña "${opts.slug}": ${opts.sent} enviados`, html, "reporte de campaña");
+}

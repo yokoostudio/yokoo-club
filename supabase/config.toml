@@ -119,3 +119,27 @@ entrypoint = "./functions/review-submit/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/tn-backfill-stamps/*.html" ]
+
+# Campañas a toda la lista del Club (lanzamientos, CyberMonday). El contenido
+# del mail llega en el body; se protege con CRON_SECRET igual que review-invites.
+[functions.campaign-send]
+enabled = true
+verify_jwt = false
+import_map = "./functions/campaign-send/deno.json"
+entrypoint = "./functions/campaign-send/index.ts"
+
+# Baja de las campañas. La llama el link del pie del mail (GET) o el botón
+# "Cancelar suscripción" del cliente de mail (POST de un clic, sin credenciales).
+[functions.campaign-unsubscribe]
+enabled = true
+verify_jwt = false
+import_map = "./functions/campaign-unsubscribe/deno.json"
+entrypoint = "./functions/campaign-unsubscribe/index.ts"
+
+# La llama el cron de la base una vez por minuto: dispara las campañas que ya
+# llegaron a su hora agendada. Mismo secreto que campaign-send.
+[functions.campaign-due]
+enabled = true
+verify_jwt = false
+import_map = "./functions/campaign-due/deno.json"
+entrypoint = "./functions/campaign-due/index.ts"

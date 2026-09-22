@@ -1,0 +1,375 @@
+<title>Mails de primavera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&display=swap">
+<style>
+  :root {
+    --bg: #E8E6E1;
+    --panel: #FFFFFF;
+    --ink: #22201C;
+    --muted: #7C766C;
+    --line: #D2CEC5;
+    --accent: #C4331F;
+    --brand: #f5ee93;
+    --brand-deep: #3a2115;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171613;
+      --panel: #201E1A;
+      --ink: #EDE8DD;
+      --muted: #948C7F;
+      --line: #322E28;
+      --accent: #F0785F;
+      --brand-deep: #C9A227;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171613;
+    --panel: #201E1A;
+    --ink: #EDE8DD;
+    --muted: #948C7F;
+    --line: #322E28;
+    --accent: #F0785F;
+    --brand-deep: #C9A227;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; }
+
+  .eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted); margin: 0;
+  }
+  h1 {
+    font-size: clamp(30px, 6vw, 42px); font-weight: 800;
+    letter-spacing: -0.035em; line-height: 1; margin: 10px 0 0;
+  }
+  .lede { color: var(--muted); margin: 12px 0 0; max-width: 60ch; font-size: 14.5px; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+    margin-top: 24px; padding: 14px 16px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  }
+  .controls label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer; }
+  .controls input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .controls .hint { font-size: 12.5px; color: var(--muted); margin-left: auto; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-top: 28px;
+    align-items: start;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .card-head { padding: 16px 18px 14px; border-bottom: 1px solid var(--line); }
+  .when {
+    display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .card-head h2 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 12px; }
+
+  .inbox {
+    background: var(--bg); border-radius: 6px; padding: 10px 12px; font-size: 13px;
+  }
+  .inbox .row { display: flex; gap: 8px; }
+  .inbox .row + .row { margin-top: 4px; }
+  .inbox .k { color: var(--muted); flex: 0 0 52px; font-size: 12px; padding-top: 1px; }
+  .inbox .v { color: var(--ink); word-break: break-word; }
+  .inbox .subject { font-weight: 700; }
+
+  .frame { background: var(--brand); }
+  iframe { display: block; width: 100%; border: 0; background: var(--brand); }
+
+  .note {
+    margin: 0; padding: 12px 18px 14px; font-size: 12.5px; color: var(--muted);
+    border-top: 1px solid var(--line); line-height: 1.5;
+  }
+  .note b { color: var(--accent); font-weight: 600; }
+
+  .public {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 22px;
+    align-items: start;
+    padding-top: 28px;
+    border-top: 2px solid var(--line);
+  }
+  .public-head h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.025em; margin: 5px 0 10px; }
+  .public-head p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .public-head p b { color: var(--ink); font-weight: 600; }
+  .copy-block {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--brand-deep);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .copy-label {
+    display: block; font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+  }
+  .copy-block p { margin: 0 0 10px; font-size: 15px; line-height: 1.55; }
+  .copy-block p:last-child { margin-bottom: 0; }
+
+  footer {
+    margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line);
+    font-size: 12.5px; color: var(--muted); max-width: 70ch;
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Yokoo Club · vista previa</p>
+    <h1>Mails de primavera</h1>
+    <p class="lede">Los mails del jueves 24, como los va a ver quien los reciba. Son la plantilla real: el mismo código que usa <code>campaign-send</code>, con el contenido de los archivos de campaña.</p>
+  </header>
+
+  <div class="controls">
+    <label><input type="checkbox" id="sinfoto"> Ver sin la foto</label>
+    <label><input type="checkbox" id="nombre" checked> Saludo con nombre</label>
+    <span class="hint">Fotos reales, redimensionadas a 840&nbsp;px y pasadas a JPEG: 118 y 125&nbsp;KB (venían de 50&nbsp;MB).</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <section class="public">
+    <div class="public-head">
+      <span class="when">Jueves 20:00 · no es un mail</span>
+      <h2>La apertura al público</h2>
+      <p>A esta hora no sale ningún mail. Todos los que están en la lista ya están en el Club, así que un mail acá sería repetirles algo que ya saben, media hora después. La apertura pública va por <b>Instagram y el banner de la home</b>, que es donde están los que todavía no son socios.</p>
+    </div>
+    <div class="copy-block">
+      <span class="copy-label">Texto para el post</span>
+      <p>La colección de primavera ya está online.</p>
+      <p>Los del Yokoo Club la vieron media hora antes que todos. La próxima podés ser vos: entrá al Club y te avisamos primero.</p>
+    </div>
+  </section>
+
+  <footer>
+    El logo sale del bucket de Supabase, igual que en los mails de estrella y de reseña. El pie con la baja es obligatorio en mails masivos: sin él, Gmail y Outlook empiezan a mandarlos a spam. Dar de baja no corta los mails de la cuenta (ingreso, estrellas, premios), sólo las campañas.
+  </footer>
+</div>
+
+<script>
+  // Copia literal de renderCampaignHtml() de supabase/functions/_shared/notify.ts.
+  // Si se cambia la plantilla allá, hay que pegarla de nuevo acá.
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function renderImages(urls, alt) {
+    const pics = urls.filter((u) => u && String(u).trim());
+    if (pics.length === 0) return "";
+
+    const safeAlt = escapeHtml(alt);
+    const img = (src, w) =>
+      `<img src="${src}" alt="${safeAlt}" width="${w}" style="display:block; width:100%; max-width:${w}px; height:auto; border-radius:14px;" />`;
+
+    const rows = [];
+    let i = 0;
+
+    if (pics.length % 2 === 1) {
+      rows.push(`<tr><td colspan="2" style="padding:0 0 10px;">${img(pics[0], 420)}</td></tr>`);
+      i = 1;
+    }
+
+    for (; i < pics.length; i += 2) {
+      rows.push(
+        `<tr>` +
+          `<td width="50%" style="padding:0 5px 10px 0;">${img(pics[i], 205)}</td>` +
+          `<td width="50%" style="padding:0 0 10px 5px;">${img(pics[i + 1], 205)}</td>` +
+        `</tr>`,
+      );
+    }
+
+    return `<tr><td style="padding-bottom:8px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">${rows.join("")}</table>
+    </td></tr>`;
+  }
+
+  function renderCampaignHtml(opts) {
+    const paragraphs = opts.paragraphs
+      .map(
+        (p) =>
+          `<p style="margin:0 0 14px; color:rgba(246,239,163,.88); font-size:15px; line-height:1.55;">${escapeHtml(p)}</p>`,
+      )
+      .join("");
+
+    const image = renderImages(
+      opts.images && opts.images.length ? opts.images : opts.imageUrl ? [opts.imageUrl] : [],
+      opts.imageAlt || "",
+    );
+
+    const cta =
+      opts.ctaText && opts.ctaUrl
+        ? `<a href="${opts.ctaUrl}" style="display:inline-block; margin-top:8px; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:13px 24px; border-radius:999px;">${escapeHtml(opts.ctaText)}</a>`
+        : "";
+
+    const footnote = opts.footnote
+      ? `<p style="margin:16px 0 0; color:rgba(246,239,163,.6); font-size:12.5px; line-height:1.5;">${escapeHtml(opts.footnote)}</p>`
+      : "";
+
+    return `<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">
+    <tr><td style="text-align:center; padding-bottom:18px;">
+      <img src="https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/logo-yokoo-studio.png" width="190" alt="Yokoo Studio" style="display:block; margin:0 auto; width:190px; height:auto; max-width:100%;" />
+    </td></tr>
+    ${image}
+    <tr><td style="background:#3a2115; border-radius:20px; padding:28px 24px; text-align:center;">
+      ${opts.name ? `<p style="margin:0 0 6px; color:rgba(246,239,163,.75); font-size:14px;">Hola ${escapeHtml(opts.name)},</p>` : ""}
+      <p style="margin:0 0 16px; color:#f6efa3; font-size:21px; font-weight:800; line-height:1.3;">${escapeHtml(opts.headline)}</p>
+      ${paragraphs}
+      ${cta}
+      ${footnote}
+    </td></tr>
+    <tr><td style="padding:18px 8px 0; text-align:center;">
+      <p style="margin:0; color:rgba(58,33,21,.6); font-size:11.5px; line-height:1.5;">
+        Recibís esto porque estás registrado/a en Yokoo Club.<br />
+        <a href="${opts.unsubUrl}" style="color:rgba(58,33,21,.75);">No quiero recibir más novedades</a>
+      </p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  // Mismas URLs que usan los mails reales: el bucket público de Supabase.
+  // Los clientes de mail bloquean las imágenes embebidas, así que nunca van
+  // en base64 -- siempre por URL.
+  const FOTO_AVISO = "https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/primavera-2026-172.jpg";
+  const FOTO_ACCESO = "https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/primavera-2026-260.jpg";
+
+  const CAMPANIAS = [
+    {
+      when: "Jueves 10:00",
+      title: "El aviso",
+      file: "primavera-aviso.json",
+      foto: "FOTO_AVISO",
+      note: "Crea la cita. Sin este mail, la ventana de 30 minutos no la usa casi nadie.",
+      content: {
+        subject: "Hoy a las 19:30 entrás antes que nadie",
+        headline: "Hoy llega la colección de primavera",
+        paragraphs: [
+          "A las 20:00 sale para todos. Vos, que estás en el Club, la vas a poder ver y comprar desde las 19:30.",
+          "A esa hora te mandamos el link directo por mail. Media hora antes, con todos los talles disponibles.",
+          "Nos vemos a la tarde.",
+        ],
+        imageAlt: "Colección primavera Yokoo Studio",
+        footnote: "Y sí: si comprás, sumás tu estrella igual que siempre.",
+      },
+    },
+    {
+      when: "Jueves 19:30",
+      title: "El acceso",
+      file: "primavera-acceso.json",
+      foto: "FOTO_ACCESO",
+      note: "El único con botón. El link va a los productos cargados sin categoría, que todavía no aparecen en la tienda.",
+      content: {
+        subject: "Listo: tu acceso anticipado ya está abierto",
+        headline: "Entrá antes que nadie",
+        paragraphs: [
+          "Acá está la colección de primavera completa, media hora antes de que salga para todos.",
+          "Ahora mismo están todos los talles. A las 20:00 abre para el resto.",
+        ],
+        imageAlt: "Colección primavera Yokoo Studio",
+        ctaText: "Ver la colección",
+        ctaUrl: "#",
+        footnote: "Si comprás, sumás tu estrella automáticamente.",
+      },
+    },
+  ];
+
+  const grid = document.getElementById("grid");
+  const chkNombre = document.getElementById("nombre");
+  const chkSinFoto = document.getElementById("sinfoto");
+  const FOTOS = { FOTO_AVISO: FOTO_AVISO, FOTO_ACCESO: FOTO_ACCESO };
+
+  function build() {
+    grid.innerHTML = "";
+    CAMPANIAS.forEach(function (c) {
+      const fotos = chkSinFoto.checked ? [] : [FOTOS[c.foto]];
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const head = document.createElement("div");
+      head.className = "card-head";
+      head.innerHTML =
+        '<span class="when">' + c.when + "</span>" +
+        "<h2>" + c.title + "</h2>" +
+        '<div class="inbox">' +
+          '<div class="row"><span class="k">De</span><span class="v">Yokoo Studio &lt;club@mail.yokoo.com.ar&gt;</span></div>' +
+          '<div class="row"><span class="k">Asunto</span><span class="v subject">' + escapeHtml(c.content.subject) + "</span></div>" +
+        "</div>";
+      card.appendChild(head);
+
+      const frame = document.createElement("div");
+      frame.className = "frame";
+      const iframe = document.createElement("iframe");
+      iframe.setAttribute("title", "Mail: " + c.title);
+      iframe.setAttribute("scrolling", "no");
+      iframe.srcdoc = renderCampaignHtml(
+        Object.assign({}, c.content, {
+          name: chkNombre.checked ? "Valentina" : "",
+          images: fotos,
+          unsubUrl: "#",
+        }),
+      );
+      iframe.addEventListener("load", function () {
+        try {
+          iframe.style.height = iframe.contentDocument.body.scrollHeight + 8 + "px";
+        } catch (e) {
+          iframe.style.height = "640px";
+        }
+      });
+      frame.appendChild(iframe);
+      card.appendChild(frame);
+
+      const note = document.createElement("p");
+      note.className = "note";
+      note.innerHTML = "<b>" + c.file + "</b> — " + c.note;
+      card.appendChild(note);
+
+      grid.appendChild(card);
+    });
+  }
+
+  chkSinFoto.addEventListener("change", build);
+  chkNombre.addEventListener("change", build);
+  build();
+</script>
+<style>
+  .controls select {
+    font-family: inherit; font-size: 13.5px; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 5px; padding: 4px 6px; cursor: pointer;
+  }
+  .controls label { gap: 7px; }
+</style>
