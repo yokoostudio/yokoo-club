@@ -9,6 +9,9 @@ export async function sendStampEmail(opts: {
   currentStamps: number;
   goal: number;
   appUrl: string;
+  // Cuántas estrellas sumó ESTA compra. Normalmente 1; durante el Cyber son 2.
+  // Opcional para no tocar las otras funciones que ya llamaban a esto.
+  stampsAdded?: number;
 }): Promise<boolean> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) {
@@ -19,13 +22,22 @@ export async function sendStampEmail(opts: {
   const name = opts.displayName || opts.toEmail.split("@")[0];
   const complete = opts.currentStamps >= opts.goal;
 
+  const doble = (opts.stampsAdded ?? 1) >= 2;
+  const faltan = opts.goal - opts.currentStamps;
+
   const subject = complete
     ? "¡Completaste tu Credencial del Club! 🎁"
-    : `¡Sumaste una estrella! ${opts.currentStamps}/${opts.goal} ⭐`;
+    : doble
+      ? `¡Sumaste 2 estrellas! ${opts.currentStamps}/${opts.goal} ⭐⭐`
+      : `¡Sumaste una estrella! ${opts.currentStamps}/${opts.goal} ⭐`;
 
   const bodyMessage = complete
-    ? "¡Llegaste a las 5 estrellas! Entrá a tu credencial para descubrir y canjear tu premio sorpresa."
-    : `Te faltan ${opts.goal - opts.currentStamps} estrella${opts.goal - opts.currentStamps === 1 ? "" : "s"} para destrabar tu premio.`;
+    ? doble
+      ? "¡Llegaste a las 5 estrellas con el doble del Cyber! Entrá a tu credencial para descubrir y canjear tu premio sorpresa."
+      : "¡Llegaste a las 5 estrellas! Entrá a tu credencial para descubrir y canjear tu premio sorpresa."
+    : doble
+      ? `Compraste en el Cyber, así que esta compra valió doble. Te faltan ${faltan} estrella${faltan === 1 ? "" : "s"} para destrabar tu premio.`
+      : `Te faltan ${faltan} estrella${faltan === 1 ? "" : "s"} para destrabar tu premio.`;
 
   const html = renderEmailHtml({ name, currentStamps: opts.currentStamps, goal: opts.goal, bodyMessage, appUrl: opts.appUrl });
 

@@ -14,6 +14,7 @@ const CORS_HEADERS = {
 };
 
 import { sendStampEmail } from "../_shared/notify.ts";
+import { esCompraDelCyber, CYBER_SOURCE } from "../_shared/cyber.ts";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
@@ -81,7 +82,7 @@ Deno.serve(async (req: Request) => {
   const PAGE_SIZE = 200;
   const MAX_PAGES = 15; // hasta 3000 pedidos revisados -- cubre la tienda entera con margen
 
-  const matchedOrderIds: string[] = [];
+  const matchedOrderIds: { id: string; fecha: string | null }[] = [];
   const email = customer.email.toLowerCase();
   const sinceMs = Date.parse(sinceDate);
 
@@ -100,7 +101,9 @@ Deno.serve(async (req: Request) => {
       if (isNaN(createdMs) || createdMs < sinceMs) continue;
       const orderEmail = String(order?.customer?.email || order?.contact_email || "").toLowerCase();
       if (orderEmail === email) {
-        matchedOrderIds.push(String(order.id));
+        // Se guarda también la fecha de pago: hace falta para saber si la
+        // compra cae en la ventana de doble estrella del Cyber.
+        matchedOrderIds.push({ id: String(order.id), fecha: order?.paid_at ?? order?.created_at ?? null });
       }
     }
 
@@ -114,13 +117,29 @@ Deno.serve(async (req: Request) => {
   // 5) Insertar un stamp_event por cada pedido encontrado. El UNIQUE(source,
   // order_id) evita duplicar si alguno ya había sido sumado por el webhook.
   let added = 0;
-  for (const orderId of matchedOrderIds) {
+  for (const pedido of matchedOrderIds) {
     const insertRes = await fetch(`${supabaseUrl}/rest/v1/stamp_events`, {
       method: "POST",
       headers: { ...svcHeaders, Prefer: "return=minimal" },
-      body: JSON.stringify({ customer_id: customer.id, source: "web_order", order_id: orderId }),
+      body: JSON.stringify({ customer_id: customer.id, source: "web_order", order_id: pedido.id }),
     });
     if (insertRes.ok) added++;
+
+    // Doble estrella del Cyber también acá: quien compró durante el Cyber sin
+    // tener cuenta y se registra después tiene que recibir las dos estrellas
+    // igual que quien ya estaba registrado. Sin esto, justamente los clientes
+    // nuevos que trae el Cyber serían los únicos que cobran de menos.
+    if (esCompraDelCyber(pedido.fecha)) {
+      const bonusRes = await fetch(`${supabaseUrl}/rest/v1/stamp_events`, {
+        method: "POST",
+        headers: { ...svcHeaders, Prefer: "return=minimal" },
+        body: JSON.stringify({ customer_id: customer.id, source: CYBER_SOURCE, order_id: pedido.id }),
+      });
+      if (bonusRes.ok) added++;
+      else if (bonusRes.status !== 409) {
+        console.error("Error en la estrella extra del Cyber (backfill)", bonusRes.status, await bonusRes.text());
+      }
+    }
   }
 
   if (added === 0) {

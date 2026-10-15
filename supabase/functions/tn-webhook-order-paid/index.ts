@@ -6,6 +6,7 @@
 // así que hay que pedirle el pedido completo a su API para sacar el mail.
 
 import { sendStampEmail, sendInviteEmail } from "../_shared/notify.ts";
+import { esCompraDelCyber, CYBER_SOURCE } from "../_shared/cyber.ts";
 import { verifyTiendanubeHmac } from "../_shared/tiendanube.ts";
 
 Deno.serve(async (req: Request) => {
@@ -103,9 +104,31 @@ Deno.serve(async (req: Request) => {
     return json({ ok: false }, 500);
   }
 
+  // 4b) Doble estrella del Cyber. Se mira la fecha de PAGO del pedido, no la de
+  // hoy: si Tiendanube reintenta el webhook días después, la compra sigue
+  // valiendo lo que valía cuando se hizo. Fuera de la ventana no hace nada.
+  let sumadas = 1;
+  if (esCompraDelCyber(order?.paid_at ?? order?.created_at)) {
+    const bonusRes = await fetch(`${supabaseUrl}/rest/v1/stamp_events`, {
+      method: "POST",
+      headers: { ...svcHeaders, Prefer: "return=minimal" },
+      body: JSON.stringify({ customer_id: customer.id, source: CYBER_SOURCE, order_id: orderId }),
+    });
+    if (bonusRes.ok) {
+      sumadas = 2;
+    } else if (bonusRes.status === 409) {
+      // Ya estaba: el webhook se reintentó. No es error.
+      sumadas = 2;
+    } else {
+      // La estrella normal ya se guardó, así que no se cancela la operación:
+      // se registra y se sigue con una sola.
+      console.error("Error insertando la estrella extra del Cyber", bonusRes.status, await bonusRes.text());
+    }
+  }
+
   var newStamps = customer.current_stamps;
   if (customer.current_stamps < goal) {
-    newStamps = customer.current_stamps + 1;
+    newStamps = Math.min(customer.current_stamps + sumadas, goal);
     await fetch(`${supabaseUrl}/rest/v1/customers?id=eq.${customer.id}`, {
       method: "PATCH",
       headers: svcHeaders,
@@ -119,10 +142,11 @@ Deno.serve(async (req: Request) => {
     currentStamps: newStamps,
     goal,
     appUrl: Deno.env.get("APP_URL") || "http://localhost:8888",
+    stampsAdded: sumadas,
   });
 
-  console.log("Estrella sumada por compra web:", email, "pedido", orderId);
-  return json({ ok: true, customer: email }, 200);
+  console.log(`Estrella${sumadas === 2 ? "s (doble Cyber)" : ""} sumada por compra web:`, email, "pedido", orderId);
+  return json({ ok: true, customer: email, estrellas: sumadas }, 200);
 });
 
 // Cuando alguien compra sin estar registrado en la tarjeta: le mandamos
