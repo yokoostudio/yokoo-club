@@ -19,7 +19,7 @@
      - Si alguien ya dejó su mail, no vuelve a ver ni la barra ni el modal.
 --------------------------------------------------------------------------- #}
 
-{% set VISIBLE_PARA_TODOS = false %}
+{% set VISIBLE_PARA_TODOS = true %}
 
 <style>
   .yk-gate-bar {
