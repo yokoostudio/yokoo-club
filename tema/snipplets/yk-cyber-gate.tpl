@@ -76,6 +76,18 @@
   .yk-gate-modal .yk-gate-form button:hover { background: #4b2c1c; }
   .yk-gate-legal { margin: 12px 0 0; font-size: 11.5px; opacity: .6; color: #3A2115; }
 
+  .yk-gate-count {
+    display: inline-flex; align-items: baseline; gap: 7px;
+    background: rgba(0,0,0,.22); border-radius: 999px;
+    padding: 5px 13px; white-space: nowrap;
+  }
+  .yk-gate-count-label {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em; opacity: .75;
+  }
+  .yk-gate-count b {
+    font-weight: 800; font-size: 15px; letter-spacing: .01em;
+    font-variant-numeric: tabular-nums;
+  }
   .yk-gate-entrar {
     display: inline-block; margin-left: 10px;
     background: #F5EE93; color: #3A2115; text-decoration: none;
@@ -91,9 +103,17 @@
   .yk-gate-modal .yk-gate-ok { color: #3A2115; }
 
   @media (max-width: 575px) {
-    .yk-gate-bar { font-size: 13px; padding: 10px 12px; gap: 10px; }
-    .yk-gate-bar .yk-sub { display: block; width: 100%; font-size: 12px; }
-    .yk-gate-form input[type="email"] { min-width: 0; flex: 1 1 150px; }
+    /* En el celular la barra compite con el contenido, así que todo se
+       aprieta: menos aire, tipografía algo menor y la etiqueta "Faltan"
+       afuera, que se entiende igual por contexto. */
+    .yk-gate-bar { font-size: 12.5px; padding: 8px 12px; gap: 7px; }
+    .yk-gate-bar .yk-sub { display: block; width: 100%; font-size: 11.5px; }
+    .yk-gate-count { padding: 2px 10px; }
+    .yk-gate-count-label { display: none; }
+    .yk-gate-count b { font-size: 14px; }
+    .yk-gate-form { gap: 6px; }
+    .yk-gate-form input[type="email"] { min-width: 0; flex: 1 1 140px; padding: 8px 14px; }
+    .yk-gate-form button { padding: 8px 16px; font-size: 12px; }
   }
 </style>
 
@@ -109,12 +129,17 @@
   var MOSTRAR_MODAL = false;
 
   // Calendario. Hora de Argentina (UTC-3), expresado en UTC.
-  //   26/10 00:00 ART -> fase 1: "sumate antes que nadie"
-  //   31/10 00:00 ART -> fase 2: "el Cyber ya está abierto"
-  //    4/11 23:59 ART -> se apaga solo, no hay que sacar nada
+  //   26/10 00:00 -> fase 1: captación, con cuenta regresiva al 31
+  //   31/10 00:00 -> fase 2: el Cyber abre SÓLO para el Club (la barra es
+  //                  la puerta de entrada para quien no está registrado)
+  //    1/11 00:00 -> fase 3: ya está abierto para todos, la barra deja de
+  //                  ser una puerta y pasa a ser un aviso
+  //    1/11 23:59 -> se apaga sola. Del 2 en adelante la web vuelve a ser
+  //                  la de siempre y reaparece el pop-up de Yokoo Members.
   var INICIO_FASE_1 = Date.parse("2026-10-26T03:00:00Z");
   var INICIO_FASE_2 = Date.parse("2026-10-31T03:00:00Z");
-  var FIN           = Date.parse("2026-11-05T02:59:59Z");
+  var INICIO_FASE_3 = Date.parse("2026-11-01T03:00:00Z");
+  var FIN           = Date.parse("2026-11-02T02:59:59Z");
 
   var q = new URLSearchParams(window.location.search);
   var preview = q.get("yk_gate") === "1";
@@ -122,11 +147,12 @@
   var ahora = Date.now();
   var FASE;
   if (preview) {
-    FASE = q.get("fase") === "2" ? 2 : 1;
+    FASE = parseInt(q.get("fase") || "1", 10);
+    if (FASE !== 2 && FASE !== 3) FASE = 1;
   } else {
     if (!VISIBLE_PARA_TODOS) return;
     if (ahora < INICIO_FASE_1 || ahora > FIN) return;
-    FASE = ahora >= INICIO_FASE_2 ? 2 : 1;
+    FASE = ahora >= INICIO_FASE_3 ? 3 : (ahora >= INICIO_FASE_2 ? 2 : 1);
   }
 
   var POS = q.get("pos") === "arriba" ? "arriba" : "abajo";
@@ -144,6 +170,14 @@
       titulo: "El Cyber del Club ya está abierto",
       bajada: "Hoy las ofertas son sólo para el Club. Dejá tu mail y entrás al instante: no hace falta esperar ningún correo.",
       boton: "Entrar al Cyber",
+    },
+    // El 1/11 el Cyber ya es para todos: la barra deja de ser una puerta.
+    // Decir "entrá con tu mail" ese día sería mentira, porque no hace falta.
+    3: {
+      barra: "<strong>El Cyber ya está abierto para todos.</strong> <span class='yk-sub'>Hasta 30% OFF + 10% por transferencia. Sumate al Club y cada compra te suma el doble de estrellas.</span>",
+      titulo: "El Cyber ya está abierto para todos",
+      bajada: "Hasta 30% OFF llevando más prendas, más 10% por transferencia. Y si te sumás al Club, estos días cada compra te suma el doble de estrellas.",
+      boton: "Sumarme al Club",
     },
   }[FASE];
 
@@ -219,6 +253,35 @@
     });
   }
 
+  // Cuenta regresiva hasta que el Cyber abre para el Club (31/10 00:00 ART).
+  // Arriba de 24 horas muestra días, horas y minutos; en el último día pasa a
+  // horas, minutos y segundos, que es cuando de verdad aprieta.
+  function arrancarContador(el) {
+    if (!el) return;
+    var ultimo = "";
+    function dos(n) { return n < 10 ? "0" + n : String(n); }
+
+    function pintar() {
+      var falta = INICIO_FASE_2 - Date.now();
+      var texto;
+      if (falta <= 0) {
+        texto = "¡Ya abre!";
+      } else {
+        var s = Math.floor(falta / 1000);
+        var d = Math.floor(s / 86400); s -= d * 86400;
+        var h = Math.floor(s / 3600);  s -= h * 3600;
+        var m = Math.floor(s / 60);    s -= m * 60;
+        texto = d > 0
+          ? d + "d " + dos(h) + "h " + dos(m) + "m"
+          : dos(h) + "h " + dos(m) + "m " + dos(s) + "s";
+      }
+      if (texto !== ultimo) { el.textContent = texto; ultimo = texto; }
+    }
+
+    pintar();
+    setInterval(pintar, 1000);
+  }
+
   function mostrarError(form, texto) {
     var prev = form.parentNode.querySelector(".yk-gate-error");
     if (prev) prev.remove();
@@ -233,9 +296,17 @@
     var bar = document.createElement("div");
     bar.className = "yk-gate-bar";
     bar.setAttribute("data-pos", POS);
-    bar.innerHTML = "<div>" + TEXTOS.barra + "</div>" + formulario() +
+    // La cuenta regresiva va sólo en la fase de captación: una vez que el
+    // Cyber arrancó, contar hacia atrás hacia algo que ya pasó no tiene
+    // sentido.
+    var contador = FASE === 1
+      ? '<span class="yk-gate-count"><span class="yk-gate-count-label">Faltan</span><b class="js-yk-count">—</b></span>'
+      : "";
+
+    bar.innerHTML = "<div>" + TEXTOS.barra + "</div>" + contador + formulario() +
       '<button class="yk-gate-close" aria-label="Cerrar">&times;</button>';
     document.body.appendChild(bar);
+    if (FASE === 1) arrancarContador(bar.querySelector(".js-yk-count"));
     conectar(bar.querySelector("form"), bar);
     bar.querySelector(".yk-gate-close").addEventListener("click", function () {
       guardar("yk_gate_barra_cerrada", String(Date.now()));
