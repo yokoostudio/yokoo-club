@@ -24,7 +24,7 @@
 <style>
   .yk-gate-bar {
     position: fixed; left: 0; right: 0; z-index: 9990;
-    background: #3A2115; color: #F5EE93;
+    background: #C4331F; color: #FFF4E3;
     padding: 12px 16px;
     display: flex; align-items: center; justify-content: center;
     gap: 14px; flex-wrap: wrap;
@@ -34,7 +34,7 @@
   .yk-gate-bar[data-pos="abajo"] { bottom: 0; }
   .yk-gate-bar[data-pos="arriba"] { top: 0; box-shadow: 0 4px 18px rgba(0,0,0,.18); }
   .yk-gate-bar strong { font-weight: 800; }
-  .yk-gate-bar .yk-sub { opacity: .75; font-size: 13px; }
+  .yk-gate-bar .yk-sub { opacity: .82; font-size: 13px; }
 
   .yk-gate-form { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
   .yk-gate-form input[type="email"] {
@@ -49,7 +49,7 @@
   }
   .yk-gate-form button:hover { background: #fff8b8; }
   .yk-gate-close {
-    background: transparent; border: 0; color: #F5EE93; opacity: .55;
+    background: transparent; border: 0; color: #FFF4E3; opacity: .6;
     font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px;
   }
   .yk-gate-close:hover { opacity: 1; }
@@ -76,7 +76,18 @@
   .yk-gate-modal .yk-gate-form button:hover { background: #4b2c1c; }
   .yk-gate-legal { margin: 12px 0 0; font-size: 11.5px; opacity: .6; color: #3A2115; }
 
-  .yk-gate-ok { color: #F5EE93; font-size: 14px; font-weight: 700; }
+  .yk-gate-entrar {
+    display: inline-block; margin-left: 10px;
+    background: #F5EE93; color: #3A2115; text-decoration: none;
+    border-radius: 999px; padding: 9px 20px;
+    font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em;
+  }
+  .yk-gate-error {
+    width: 100%; margin-top: 8px; text-align: center;
+    font-size: 12.5px; color: #FFE0D6;
+  }
+  .yk-gate-modal .yk-gate-error { color: #8a2a18; }
+  .yk-gate-ok { color: #FFF4E3; font-size: 14px; font-weight: 700; }
   .yk-gate-modal .yk-gate-ok { color: #3A2115; }
 
   @media (max-width: 575px) {
@@ -92,11 +103,32 @@
 
   var VISIBLE_PARA_TODOS = {{ VISIBLE_PARA_TODOS ? 'true' : 'false' }};
 
+  // La ventana (modal) queda apagada: Juan prefirió sólo la barra, que no
+  // interrumpe. Poner en true para encenderla -- tiene sentido el 31, cuando
+  // el Cyber ya está abierto y cada registro vale una venta.
+  var MOSTRAR_MODAL = false;
+
+  // Calendario. Hora de Argentina (UTC-3), expresado en UTC.
+  //   26/10 00:00 ART -> fase 1: "sumate antes que nadie"
+  //   31/10 00:00 ART -> fase 2: "el Cyber ya está abierto"
+  //    4/11 23:59 ART -> se apaga solo, no hay que sacar nada
+  var INICIO_FASE_1 = Date.parse("2026-10-26T03:00:00Z");
+  var INICIO_FASE_2 = Date.parse("2026-10-31T03:00:00Z");
+  var FIN           = Date.parse("2026-11-05T02:59:59Z");
+
   var q = new URLSearchParams(window.location.search);
   var preview = q.get("yk_gate") === "1";
-  if (!VISIBLE_PARA_TODOS && !preview) return;
 
-  var FASE = q.get("fase") === "2" ? 2 : 1;
+  var ahora = Date.now();
+  var FASE;
+  if (preview) {
+    FASE = q.get("fase") === "2" ? 2 : 1;
+  } else {
+    if (!VISIBLE_PARA_TODOS) return;
+    if (ahora < INICIO_FASE_1 || ahora > FIN) return;
+    FASE = ahora >= INICIO_FASE_2 ? 2 : 1;
+  }
+
   var POS = q.get("pos") === "arriba" ? "arriba" : "abajo";
   var FORZAR_MODAL = q.get("modal") === "1";
 
@@ -136,21 +168,64 @@
       "</form>";
   }
 
+  var ENDPOINT = "https://givnsohzgsugvrfuftcm.supabase.co/functions/v1/cyber-unlock";
+
   function conectar(form, contenedor) {
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
-      var mail = form.querySelector("input[type=email]").value.trim();
+      var input = form.querySelector("input[type=email]");
+      var boton = form.querySelector("button");
+      var mail = input.value.trim();
       if (!mail) return;
-      // TODO: acá va la llamada a la función cyber-unlock, que todavía no
-      // está construida. Por ahora sólo muestra el estado de éxito para
-      // poder evaluar el diseño.
-      guardar("yk_gate_mail", "1");
-      contenedor.innerHTML = '<span class="yk-gate-ok">¡Listo! Te mandamos el acceso a ' + mail.replace(/[<>&]/g, "") + "</span>";
-      setTimeout(function () {
-        var ov = document.querySelector(".yk-gate-overlay");
-        if (ov) ov.remove();
-      }, 2200);
+
+      boton.disabled = true;
+      var textoOriginal = boton.textContent;
+      boton.textContent = "Un segundo...";
+
+      fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: mail }),
+      })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (!res.ok || !res.d || !res.d.ok) {
+            boton.disabled = false;
+            boton.textContent = textoOriginal;
+            mostrarError(form, (res.d && res.d.error) || "No pudimos registrarte. Probá de nuevo.");
+            return;
+          }
+          guardar("yk_gate_mail", "1");
+          if (FASE === 2 && res.d.url) {
+            // El Cyber ya está abierto: se entra ahora, sin esperar el mail.
+            contenedor.innerHTML =
+              '<span class="yk-gate-ok">¡Listo, ya sos del Club!</span> ' +
+              '<a class="yk-gate-entrar" href="' + res.d.url + '">Entrar al Cyber</a>';
+          } else {
+            contenedor.innerHTML =
+              '<span class="yk-gate-ok">¡Listo! Te mandamos tu acceso por mail. ' +
+              "Nos vemos el 31.</span>";
+            setTimeout(function () {
+              var ov = document.querySelector(".yk-gate-overlay");
+              if (ov) ov.remove();
+            }, 3200);
+          }
+        })
+        .catch(function () {
+          boton.disabled = false;
+          boton.textContent = textoOriginal;
+          mostrarError(form, "No pudimos conectarnos. Revisá tu conexión y probá de nuevo.");
+        });
     });
+  }
+
+  function mostrarError(form, texto) {
+    var prev = form.parentNode.querySelector(".yk-gate-error");
+    if (prev) prev.remove();
+    var e = document.createElement("div");
+    e.className = "yk-gate-error";
+    e.textContent = texto;
+    form.parentNode.appendChild(e);
   }
 
   // --- barra ---------------------------------------------------------------
@@ -189,6 +264,6 @@
   }
 
   if (FORZAR_MODAL) setTimeout(abrirModal, 400);
-  else if (!YA_VIO_MODAL && !esFichaDeProducto) setTimeout(abrirModal, 8000);
+  else if (MOSTRAR_MODAL && !YA_VIO_MODAL && !esFichaDeProducto) setTimeout(abrirModal, 8000);
 })();
 </script>

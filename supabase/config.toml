@@ -143,3 +143,12 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/campaign-due/deno.json"
 entrypoint = "./functions/campaign-due/index.ts"
+
+# La llama la barra del storefront: recibe un mail, crea la cuenta del Club y
+# devuelve el acceso al Cyber en el momento. Abierta a internet (sin sesión),
+# con frenos de abuso propios (ver parte-17).
+[functions.cyber-unlock]
+enabled = true
+verify_jwt = false
+import_map = "./functions/cyber-unlock/deno.json"
+entrypoint = "./functions/cyber-unlock/index.ts"
