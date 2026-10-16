@@ -92,7 +92,7 @@
 
   @media (max-width: 575px) {
     .yk-gate-bar { font-size: 13px; padding: 10px 12px; gap: 10px; }
-    .yk-gate-bar .yk-sub { display: none; }
+    .yk-gate-bar .yk-sub { display: block; width: 100%; font-size: 12px; }
     .yk-gate-form input[type="email"] { min-width: 0; flex: 1 1 150px; }
   }
 </style>
@@ -134,8 +134,8 @@
 
   var TEXTOS = {
     1: {
-      barra: "<strong>Sumate al Club de Yokoo antes que nadie.</strong> <span class='yk-sub'>Acceso anticipado al Cyber, el 31 de octubre.</span>",
-      titulo: "Sumate al Club antes que nadie",
+      barra: "<strong>Registrate al Club.</strong> <span class='yk-sub'>Sumate al Cyber de Yokoo antes que nadie.</span>",
+      titulo: "Sumate al Cyber antes que nadie",
       bajada: "El 31 de octubre el Cyber abre primero para el Club, con el mejor descuento de los cinco días. Dejanos tu mail y entrás antes que todos.",
       boton: "Quiero entrar antes",
     },
