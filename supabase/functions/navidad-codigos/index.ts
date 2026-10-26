@@ -57,6 +57,34 @@ Deno.serve(async (req: Request) => {
     Authorization: `Bearer ${serviceRoleKey}`,
   };
 
+  // --- 0) Modo prueba -------------------------------------------------------
+  // Va ANTES de buscar compradores a propósito: hasta que el Cyber no pase no
+  // hay ninguno, y necesitamos poder probar el circuito completo (cupón real
+  // con vencimiento + mail) desde hoy. Si esto estuviera más abajo, la función
+  // saldría por "nadie compró" y nunca se probaría nada.
+  if (testEmail) {
+    const conn = await traerConexion(supabaseUrl, svcHeaders);
+    if (!conn) return json({ error: "Sin conexión con Tiendanube" }, 500);
+
+    const code = "YOKOONAVIDAD-" + sufijo();
+    const r = await crearCupon(conn, code);
+    if (!r.ok) {
+      return json({ error: "No se pudo crear el cupón", status: r.status, detalle: r.detalle }, 500);
+    }
+
+    const mandado = await sendNavidadCodeEmail({
+      apiKey: resendKey,
+      toEmail: testEmail,
+      displayName: "Prueba",
+      code,
+      percent: PORCENTAJE,
+      hasta: VENCE_TEXTO,
+      tiendaUrl: TIENDA_URL,
+    });
+
+    return json({ ok: true, modo: "test", code, cuponCreado: true, mailEnviado: mandado, vence: VENCE }, 200);
+  }
+
   // --- 1) Quiénes compraron en el Cyber ------------------------------------
   // Dos consultas en vez de una: la marca `cyber_bonus` sólo se crea para
   // pedidos dentro de la ventana, así que vale siempre, aunque la estrella se
@@ -103,7 +131,7 @@ Deno.serve(async (req: Request) => {
     console.error("Error leyendo customers", custRes.status, await custRes.text());
     return json({ error: "No se pudo leer los clientes" }, 500);
   }
-  let clientes = (await custRes.json()) as { id: string; email: string; display_name: string | null }[];
+  const clientes = (await custRes.json()) as { id: string; email: string; display_name: string | null }[];
 
   if (dryRun) {
     return json(
@@ -117,12 +145,6 @@ Deno.serve(async (req: Request) => {
       },
       200,
     );
-  }
-
-  // testEmail: manda UNO solo a esa casilla, con un cupón real, para recorrer
-  // el circuito completo sin tocar clientes.
-  if (testEmail) {
-    clientes = [{ id: "00000000-0000-0000-0000-000000000000", email: testEmail, display_name: "Prueba" }];
   }
 
   // --- 4) Conexión con Tiendanube ------------------------------------------
@@ -140,25 +162,8 @@ Deno.serve(async (req: Request) => {
   for (const c of clientes) {
     const code = "YOKOONAVIDAD-" + sufijo();
 
-    const couponRes = await fetch(`https://api.tiendanube.com/v1/${conn.store_id}/coupons`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authentication: `bearer ${conn.access_token}`,
-        "User-Agent": "Yokoo Club (jcdibastiano@gmail.com)",
-      },
-      body: JSON.stringify({
-        code,
-        type: "percentage",
-        value: String(PORCENTAJE),
-        valid: true,
-        max_uses: 1,
-        end_date: VENCE,
-      }),
-    });
-
-    if (!couponRes.ok) {
-      console.error("Error creando cupón de Navidad:", code, couponRes.status, await couponRes.text());
+    const cup = await crearCupon(conn, code);
+    if (!cup.ok) {
       fallidos++;
       continue;
     }
@@ -181,20 +186,18 @@ Deno.serve(async (req: Request) => {
       continue;
     }
 
-    if (!testEmail) {
-      await fetch(`${supabaseUrl}/rest/v1/navidad_codigos`, {
-        method: "POST",
-        headers: { ...svcHeaders, Prefer: "return=minimal,resolution=ignore-duplicates" },
-        body: JSON.stringify({ customer_id: c.id, email: c.email, code }),
-      });
-    }
+    await fetch(`${supabaseUrl}/rest/v1/navidad_codigos`, {
+      method: "POST",
+      headers: { ...svcHeaders, Prefer: "return=minimal,resolution=ignore-duplicates" },
+      body: JSON.stringify({ customer_id: c.id, email: c.email, code }),
+    });
     enviados++;
 
     // Resend limita a pocas requests por segundo y acá se manda de a uno.
     await new Promise((r) => setTimeout(r, 600));
   }
 
-  if (!testEmail && enviados > 0) {
+  if (enviados > 0) {
     await sendNavidadReport({
       apiKey: resendKey,
       ownerEmail: OWNER_EMAIL,
@@ -204,8 +207,43 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  return json({ ok: true, enviados, fallidos, yaTenian: yaTienen.size, modo: testEmail ? "test" : "real" }, 200);
+  return json({ ok: true, enviados, fallidos, yaTenian: yaTienen.size, modo: "real" }, 200);
 });
+
+async function traerConexion(supabaseUrl: string, svcHeaders: Record<string, string>) {
+  const r = await fetch(
+    `${supabaseUrl}/rest/v1/tiendanube_connection?select=store_id,access_token&limit=1`,
+    { headers: svcHeaders },
+  );
+  return (await r.json())?.[0] ?? null;
+}
+
+// Un solo lugar donde se arma el cupón, para que la prueba cree exactamente
+// el mismo que la corrida real. Si difirieran, la prueba no probaría nada.
+async function crearCupon(
+  conn: { store_id: string; access_token: string },
+  code: string,
+): Promise<{ ok: boolean; status: number; detalle: string }> {
+  const res = await fetch(`https://api.tiendanube.com/v1/${conn.store_id}/coupons`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authentication: `bearer ${conn.access_token}`,
+      "User-Agent": "Yokoo Club (jcdibastiano@gmail.com)",
+    },
+    body: JSON.stringify({
+      code,
+      type: "percentage",
+      value: String(PORCENTAJE),
+      valid: true,
+      max_uses: 1,
+      end_date: VENCE,
+    }),
+  });
+  const detalle = res.ok ? "" : await res.text();
+  if (!res.ok) console.error("Error creando cupón de Navidad:", code, res.status, detalle);
+  return { ok: res.ok, status: res.status, detalle };
+}
 
 function sufijo(): string {
   const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin I/O/0/1, que se confunden al tipear
