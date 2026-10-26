@@ -670,3 +670,78 @@ export async function sendCampaignReport(opts: {
 
   return await sendViaResend(opts.apiKey, opts.ownerEmail, `Campaña "${opts.slug}": ${opts.sent} enviados`, html, "reporte de campaña");
 }
+
+// ---------------------------------------------------------------------------
+// Código de Navidad para quien compró en el Cyber (sábado 7/11).
+//
+// A diferencia de una campaña, acá cada persona recibe un código DISTINTO, así
+// que el mail se arma uno por uno y no puede salir por campaign-send.
+// ---------------------------------------------------------------------------
+
+export async function sendNavidadCodeEmail(opts: {
+  apiKey: string;
+  toEmail: string;
+  displayName: string | null;
+  code: string;
+  percent: number;
+  hasta: string; // "7 de diciembre"
+  tiendaUrl: string;
+}): Promise<boolean> {
+  const name = (opts.displayName || "").trim().split(/\s+/)[0];
+
+  const html = `<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">
+    <tr><td style="text-align:center; padding-bottom:18px;">
+      <img src="https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/logo-yokoo-studio.png" width="190" alt="Yokoo Studio" style="display:block; margin:0 auto; width:190px; height:auto; max-width:100%;" />
+    </td></tr>
+    <tr><td style="background:#3a2115; border-radius:20px; padding:28px 24px; text-align:center;">
+      ${name ? `<p style="margin:0 0 6px; color:rgba(246,239,163,.75); font-size:14px;">Hola ${escapeHtml(name)},</p>` : ""}
+      <p style="margin:0 0 16px; color:#f6efa3; font-size:21px; font-weight:800; line-height:1.3;">Tu código para diciembre</p>
+      <p style="margin:0 0 14px; color:rgba(246,239,163,.88); font-size:15px; line-height:1.55;">Compraste en el CyberYokoo, así que te dejamos algo que no le damos a nadie más.</p>
+      <p style="margin:0 0 14px; color:rgba(246,239,163,.88); font-size:15px; line-height:1.55;">Tu código es tuyo, no lo compartimos: ${opts.percent}% de descuento, válido hasta el ${escapeHtml(opts.hasta)}.</p>
+      <p style="margin:0 0 14px; color:rgba(246,239,163,.88); font-size:15px; line-height:1.55;">Es para que los regalos de fin de año los resuelvas tranquilo, sin la corrida de diciembre.</p>
+      <p style="margin:4px 0 6px; color:rgba(246,239,163,.6); font-size:11px; text-transform:uppercase; letter-spacing:.08em;">Tu código</p>
+      <p style="margin:0 0 20px; color:#f6efa3; font-size:26px; font-weight:800; letter-spacing:2px;">${escapeHtml(opts.code)}</p>
+      <a href="${opts.tiendaUrl}" style="display:inline-block; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:13px 24px; border-radius:999px;">Usar mi código</a>
+      <p style="margin:16px 0 0; color:rgba(246,239,163,.6); font-size:12.5px; line-height:1.5;">El código es personal y de un solo uso. 3 y 6 cuotas sin interés · 10% extra pagando por transferencia · Envío gratis desde $70.000.</p>
+    </td></tr>
+    <tr><td style="padding:18px 8px 0; text-align:center;">
+      <p style="margin:0; color:rgba(58,33,21,.6); font-size:11.5px; line-height:1.5;">Recibís esto porque comprás en Yokoo.</p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  return await sendViaResend(opts.apiKey, opts.toEmail, "Gracias. Esto es para vos", html, "código de Navidad");
+}
+
+// Aviso al dueño cuando sale la tanda, con el mismo criterio que el resto:
+// saber que salió sin tener que abrir el panel. Importa más que nunca acá,
+// porque la tanda del 7 se dispara sola con Juan de viaje.
+export async function sendNavidadReport(opts: {
+  apiKey: string;
+  ownerEmail: string;
+  enviados: number;
+  fallidos: number;
+  yaTenian: number;
+}): Promise<boolean> {
+  const html = `<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /></head>
+<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">
+    <tr><td style="background:#3a2115; border-radius:20px; padding:26px 24px;">
+      <p style="margin:0 0 14px; color:#f6efa3; font-size:19px; font-weight:800;">Códigos de Navidad enviados</p>
+      <p style="margin:0; color:#f6efa3; font-size:15px;">✅ ${opts.enviados} códigos creados y enviados</p>
+      ${opts.fallidos ? `<p style="margin:6px 0 0; color:#ffb4a2; font-size:15px;">⚠️ ${opts.fallidos} fallaron — volvé a correr la función, sólo reintenta esos</p>` : ""}
+      ${opts.yaTenian ? `<p style="margin:6px 0 0; color:rgba(246,239,163,.6); font-size:13px;">${opts.yaTenian} ya lo habían recibido antes</p>` : ""}
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  return await sendViaResend(opts.apiKey, opts.ownerEmail, `Códigos de Navidad: ${opts.enviados} enviados`, html, "reporte de códigos de Navidad");
+}

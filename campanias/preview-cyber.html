@@ -1,0 +1,349 @@
+<title>Mails del Cyber</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&display=swap">
+<style>
+  :root {
+    --bg: #E8E6E1; --panel: #FFFFFF; --ink: #22201C; --muted: #7C766C;
+    --line: #D2CEC5; --accent: #C4331F; --brand: #f5ee93; --brand-deep: #3a2115;
+    --ok: #5A7355;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171613; --panel: #201E1A; --ink: #EDE8DD; --muted: #948C7F;
+      --line: #322E28; --accent: #F0785F; --brand-deep: #C9A227; --ok: #8FAE87;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171613; --panel: #201E1A; --ink: #EDE8DD; --muted: #948C7F;
+    --line: #322E28; --accent: #F0785F; --brand-deep: #C9A227; --ok: #8FAE87;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px; line-height: 1.5;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h1 { font-size: clamp(30px, 6vw, 42px); font-weight: 800; letter-spacing: -.035em; line-height: 1; margin: 10px 0 0; }
+  .lede { color: var(--muted); margin: 12px 0 0; max-width: 62ch; font-size: 14.5px; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+    margin-top: 24px; padding: 14px 16px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  }
+  .controls label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer; }
+  .controls input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .controls .hint { font-size: 12.5px; color: var(--muted); margin-left: auto; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 24px; margin-top: 28px; align-items: start; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .card.pendiente { border-color: var(--accent); }
+
+  .card-head { padding: 16px 18px 14px; border-bottom: 1px solid var(--line); }
+  .when { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .card-head h2 { font-size: 17px; font-weight: 800; letter-spacing: -.02em; margin: 4px 0 10px; }
+  .aud {
+    display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 999px; background: var(--bg); color: var(--muted); margin-bottom: 10px;
+  }
+  .aud.corte { background: rgba(196,51,31,.12); color: var(--accent); }
+
+  .inbox { background: var(--bg); border-radius: 6px; padding: 10px 12px; font-size: 13px; }
+  .inbox .row { display: flex; gap: 8px; }
+  .inbox .row + .row { margin-top: 4px; }
+  .inbox .k { color: var(--muted); flex: 0 0 52px; font-size: 12px; padding-top: 1px; }
+  .inbox .v { color: var(--ink); word-break: break-word; }
+  .inbox .subject { font-weight: 700; }
+
+  .frame { background: var(--brand); }
+  iframe { display: block; width: 100%; border: 0; background: var(--brand); }
+
+  .note { margin: 0; padding: 12px 18px 14px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); line-height: 1.5; }
+  .note b { color: var(--accent); font-weight: 600; }
+
+  .avisos { margin-top: 40px; padding-top: 26px; border-top: 2px solid var(--line); }
+  .avisos h2 { font-size: 21px; font-weight: 800; letter-spacing: -.025em; margin: 0 0 14px; }
+  .aviso { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; margin-bottom: 16px; }
+  .aviso .bar { width: 3px; align-self: stretch; background: var(--accent); }
+  .aviso h3 { font-size: 14.5px; font-weight: 700; margin: 0 0 3px; letter-spacing: -.01em; }
+  .aviso p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.55; max-width: 75ch; }
+  footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); max-width: 72ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Yokoo Club · borradores</p>
+    <h1>Mails del Cyber</h1>
+    <p class="lede">Los seis mails del 31 de octubre al 7 de noviembre, con la plantilla real. El texto se cambia en los archivos de campaña, sin tocar código. Las fotos todavía no están: se ve el lugar que van a ocupar.</p>
+  </header>
+
+  <div class="controls">
+    <label><input type="checkbox" id="sinfoto"> Ver sin fotos</label>
+    <label><input type="checkbox" id="nombre" checked> Saludo con nombre</label>
+    <span class="hint">Los días en rojo tienen algo sin definir — está anotado abajo de cada uno.</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <section class="avisos">
+    <h2>Cuatro cosas antes de agendarlos</h2>
+
+    <div class="aviso">
+      <span class="bar"></span>
+      <div>
+        <h3>El lunes no puede ser "3x2 en toda la web"</h3>
+        <p>Dijiste que el drop va a precio lleno y que no entra en ningún descuento. Entonces el 3x2 no es en toda la web: es en todo menos The Third Place #2. Lo escribí así y lo aclaré al pie, porque si alguien suma dos prendas del drop esperando la tercera gratis y no se la damos, el reclamo es legítimo.</p>
+      </div>
+    </div>
+
+    <div class="aviso">
+      <span class="bar"></span>
+      <div>
+        <h3>Faltan los porcentajes del martes</h3>
+        <p>Habías dicho "20% en remeras, 10% en buzos o algo así", pero nunca lo cerraste. Lo dejé con números de ejemplo marcados. Decime los reales y los cambio en un minuto.</p>
+      </div>
+    </div>
+
+    <div class="aviso">
+      <span class="bar"></span>
+      <div>
+        <h3>El miércoles: ¿va el envío gratis sin mínimo?</h3>
+        <p>Quedó en "lo vamos a pensar". Hoy el mail no lo menciona. Si va, es el mejor cierre que podés tener y no toca el precio — avisame y lo sumo.</p>
+      </div>
+    </div>
+
+    <div class="aviso">
+      <span class="bar"></span>
+      <div>
+        <h3>El mail del 7 sale solo, pero hay que construirlo antes del viaje</h3>
+        <p>Los otros cinco mandan el mismo texto a todos. Ese manda <b>un código distinto a cada persona</b>, así que no puede salir por el sistema de campañas: necesita su propia función que busque quién compró entre el 31 y el 4, cree un cupón único por cliente con vigencia al 7/12 y se lo mande con el código ya adentro del mail. Una vez hecha, la dispara el cron solo el 7 a la mañana — no hace falta que estés. Es el mismo mecanismo que ya usa el sistema de reseñas. <b>Lo que necesito saber es qué día te vas</b>, para tenerlo probado antes.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Todos llevan al pie los medios de pago y el envío gratis desde $70.000, que es tu mayor ventaja contra LaCreme y Shaka. Y todos los del 31 al 4 mencionan la doble estrella, que si no se dice no sirve de nada.
+  </footer>
+</div>
+
+<script>
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function renderImages(urls, alt) {
+    var pics = urls.filter(function (u) { return u && String(u).trim(); });
+    if (pics.length === 0) return "";
+    var safeAlt = escapeHtml(alt);
+    var img = function (src, w) {
+      return '<img src="' + src + '" alt="' + safeAlt + '" width="' + w + '" style="display:block; width:100%; max-width:' + w + 'px; height:auto; border-radius:14px;" />';
+    };
+    var rows = [], i = 0;
+    if (pics.length % 2 === 1) { rows.push('<tr><td colspan="2" style="padding:0 0 10px;">' + img(pics[0], 420) + "</td></tr>"); i = 1; }
+    for (; i < pics.length; i += 2) {
+      rows.push("<tr>" +
+        '<td width="50%" style="padding:0 5px 10px 0;">' + img(pics[i], 205) + "</td>" +
+        '<td width="50%" style="padding:0 0 10px 5px;">' + img(pics[i + 1], 205) + "</td>" +
+      "</tr>");
+    }
+    return '<tr><td style="padding-bottom:8px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + rows.join("") + "</table></td></tr>";
+  }
+
+  function renderCampaignHtml(opts) {
+    var paragraphs = opts.paragraphs.map(function (p) {
+      return '<p style="margin:0 0 14px; color:rgba(246,239,163,.88); font-size:15px; line-height:1.55;">' + escapeHtml(p) + "</p>";
+    }).join("");
+    var image = renderImages(opts.images && opts.images.length ? opts.images : [], opts.imageAlt || "");
+    var cta = (opts.ctaText && opts.ctaUrl)
+      ? '<a href="' + opts.ctaUrl + '" style="display:inline-block; margin-top:8px; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:13px 24px; border-radius:999px;">' + escapeHtml(opts.ctaText) + "</a>"
+      : "";
+    var footnote = opts.footnote
+      ? '<p style="margin:16px 0 0; color:rgba(246,239,163,.6); font-size:12.5px; line-height:1.5;">' + escapeHtml(opts.footnote) + "</p>"
+      : "";
+    // Código personal, arriba del botón. Mismo tratamiento que ya usa el mail
+    // del cupón de bienvenida, para que se lea como algo de la casa.
+    var codigo = opts.codigo
+      ? '<p style="margin:4px 0 6px; color:rgba(246,239,163,.6); font-size:11px; text-transform:uppercase; letter-spacing:.08em;">Tu código</p>' +
+        '<p style="margin:0 0 20px; color:#f6efa3; font-size:26px; font-weight:800; letter-spacing:2px;">' + escapeHtml(opts.codigo) + "</p>"
+      : "";
+    return '<!doctype html><html lang="es"><head><meta charset="utf-8" /></head>' +
+      '<body style="margin:0; padding:24px; background:#f5ee93; font-family:system-ui,-apple-system,\'Segoe UI\',Roboto,sans-serif;">' +
+      '<table role="presentation" width="100%" style="max-width:420px; margin:0 auto;">' +
+      '<tr><td style="text-align:center; padding-bottom:18px;">' +
+      '<img src="https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/logo-yokoo-studio.png" width="190" alt="Yokoo Studio" style="display:block; margin:0 auto; width:190px; height:auto; max-width:100%;" />' +
+      "</td></tr>" + image +
+      '<tr><td style="background:#3a2115; border-radius:20px; padding:28px 24px; text-align:center;">' +
+      (opts.name ? '<p style="margin:0 0 6px; color:rgba(246,239,163,.75); font-size:14px;">Hola ' + escapeHtml(opts.name) + ",</p>" : "") +
+      '<p style="margin:0 0 16px; color:#f6efa3; font-size:21px; font-weight:800; line-height:1.3;">' + escapeHtml(opts.headline) + "</p>" +
+      paragraphs + codigo + cta + footnote +
+      "</td></tr>" +
+      '<tr><td style="padding:18px 8px 0; text-align:center;">' +
+      '<p style="margin:0; color:rgba(58,33,21,.6); font-size:11.5px; line-height:1.5;">Recibís esto porque estás registrado/a en Yokoo Club.<br /><a href="#" style="color:rgba(58,33,21,.75);">No quiero recibir más novedades</a></p>' +
+      "</td></tr></table></body></html>";
+  }
+
+  function placeholder(n) {
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">' +
+      '<rect width="400" height="300" fill="#e3d98a"/>' +
+      '<rect x="10" y="10" width="380" height="280" fill="none" stroke="#3a2115" stroke-opacity=".3" stroke-width="3" stroke-dasharray="14 10"/>' +
+      '<text x="200" y="150" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="58" font-weight="bold" fill="#3a2115" fill-opacity=".26">' + n + "</text>" +
+      '<text x="200" y="186" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="17" font-weight="bold" fill="#3a2115" fill-opacity=".6">FOTO</text></svg>';
+    return "data:image/svg+xml;base64," + btoa(svg);
+  }
+
+  var PAGO = "3 y 6 cuotas sin interés · 10% extra pagando por transferencia · Envío gratis desde $70.000.";
+
+  var MAILS = [
+    {
+      when: "Sábado 31 · 00:00", titulo: "El drop, sólo para el Club",
+      audiencia: "Los 845 del Club", corte: false, fotos: 3,
+      nota: "<b>cyber-01-drop.json</b> — El único mail del año que puede decir \"sólo para vos\" y que sea cierto. Por eso el titular es el drop y no el descuento: el drop no se puede comparar contra ninguna otra marca, el porcentaje sí.",
+      c: {
+        subject: "The Third Place #2: entrá antes que nadie",
+        headline: "The Third Place #2",
+        paragraphs: [
+          "Entrá antes que nadie a nuestro nuevo drop.",
+          "Y aprovechá el CyberYokoo con descuento escalonado: hasta 30% OFF, más 10% pagando por transferencia.",
+          "Además, cada compra te suma doble estrella.",
+          "Yo que vos aprovecharía."
+        ],
+        ctaText: "Entrar al drop", ctaUrl: "#",
+        footnote: PAGO
+      }
+    },
+    {
+      when: "Domingo 1 · 10:00", titulo: "Se abre para todos",
+      audiencia: "Todos MENOS los que compraron el sábado", corte: true, fotos: 2,
+      nota: "<b>cyber-02-apertura.json</b> — Acá se usa la segmentación. Sin eso, este mail le llegaría a quien compró anoche diciéndole \"todavía estás a tiempo\", y esa es la baja más fácil de ganarse.",
+      c: {
+        subject: "CyberYokoo para todos",
+        headline: "CyberYokoo para todos",
+        paragraphs: [
+          "Si no aprovechaste ayer, te toca hoy: sigue nuestro descuento escalonado.",
+          "Yo que vos no volvería a dormir."
+        ],
+        ctaText: "Ver el Cyber", ctaUrl: "#",
+        footnote: PAGO
+      }
+    },
+    {
+      when: "Lunes 2 · 09:00", titulo: "3x2", pendiente: true,
+      audiencia: "Todos", corte: false, fotos: 1,
+      nota: "<b>cyber-03-3x2.json</b> — Ojo con el alcance: el drop va a precio lleno, así que no es \"toda la web\". Lo aclaré al pie.",
+      c: {
+        subject: "Hoy: 3x2",
+        headline: "3x2, sólo por hoy",
+        paragraphs: [
+          "Llevás tres prendas y pagás dos. La más barata de las tres va de regalo.",
+          "Es sólo hoy: mañana cambia la oferta.",
+          "Y seguís sumando el doble de estrellas en cada compra."
+        ],
+        ctaText: "Aprovechar el 3x2", ctaUrl: "#",
+        footnote: "El 3x2 aplica a todo el Cyber. The Third Place #2 queda afuera: es colección nueva y va a precio lleno. " + PAGO
+      }
+    },
+    {
+      when: "Martes 3 · 09:00", titulo: "Descuentos por categoría", pendiente: true,
+      audiencia: "Todos", corte: false, fotos: 2,
+      nota: "<b>cyber-04-categorias.json</b> — <b>Los porcentajes son de ejemplo.</b> Pasame los reales y los cambio.",
+      c: {
+        subject: "Hoy el descuento va por categoría",
+        headline: "Buscá por lo que necesitás",
+        paragraphs: [
+          "Hoy cada categoría tiene su propio descuento: 20% en remeras, 15% en buzos y 10% en pantalones.",
+          "Aprovechá a llevarte esa prenda que venís viendo y no te animás.",
+          "Último par de días para sumar el doble de estrellas."
+        ],
+        ctaText: "Ver por categoría", ctaUrl: "#",
+        footnote: PAGO
+      }
+    },
+    {
+      when: "Miércoles 4 · 09:00", titulo: "Última chance", pendiente: true,
+      audiencia: "Todos", corte: false, fotos: 1,
+      nota: "<b>cyber-05-ultima-chance.json</b> — El último día suele ser de los que más convierten. Por eso el texto no \"despide\" el Cyber: pone una hora exacta. Falta definir si va el envío gratis sin mínimo.",
+      c: {
+        subject: "Último día del Cyber",
+        headline: "Último día de CyberYokoo, es ahora",
+        paragraphs: [
+          "Es el último día. A las 23:59 vuelve todo a su precio de siempre.",
+          "Si algo te quedó dando vueltas en el carrito, es ahora.",
+          "También es el último día en que cada compra te suma el doble de estrellas."
+        ],
+        ctaText: "Última chance", ctaUrl: "#",
+        footnote: PAGO
+      }
+    },
+    {
+      when: "Sábado 7 · 10:00", titulo: "Tu código para diciembre", pendiente: true,
+      audiencia: "SÓLO los que compraron en el Cyber", corte: true, fotos: 1,
+      nota: "<b>Necesita función propia Y hay que tenerla lista antes de que te vayas de viaje.</b> El código que se ve es de ejemplo: cada persona recibe el suyo.",
+      c: {
+        subject: "Gracias. Esto es para vos",
+        headline: "Tu código para diciembre",
+        paragraphs: [
+          "Compraste en el Cyber, así que te dejamos algo que no le damos a nadie más.",
+          "Tu código es TUYO, no lo compartimos: 25% de descuento, válido hasta el 7 de diciembre.",
+          "Es para que los regalos de fin de año los resuelvas tranquilo, sin la corrida de diciembre."
+        ],
+        codigo: "YOKOONAVIDAD-K7M2F9",
+        ctaText: "Usar mi código", ctaUrl: "#",
+        footnote: "El código es personal y de un solo uso. " + PAGO
+      }
+    }
+  ];
+
+  var grid = document.getElementById("grid");
+  var chkNombre = document.getElementById("nombre");
+  var chkSinFoto = document.getElementById("sinfoto");
+
+  function build() {
+    grid.innerHTML = "";
+    MAILS.forEach(function (m) {
+      var fotos = [];
+      if (!chkSinFoto.checked) for (var n = 1; n <= m.fotos; n++) fotos.push(placeholder(n));
+
+      var card = document.createElement("div");
+      card.className = "card" + (m.pendiente ? " pendiente" : "");
+      card.innerHTML =
+        '<div class="card-head">' +
+          '<span class="when">' + m.when + "</span>" +
+          "<h2>" + m.titulo + "</h2>" +
+          '<span class="aud' + (m.corte ? " corte" : "") + '">' + m.audiencia + "</span>" +
+          '<div class="inbox">' +
+            '<div class="row"><span class="k">De</span><span class="v">Yokoo Studio &lt;club@mail.yokoo.com.ar&gt;</span></div>' +
+            '<div class="row"><span class="k">Asunto</span><span class="v subject">' + escapeHtml(m.c.subject) + "</span></div>" +
+          "</div>" +
+        "</div>" +
+        '<div class="frame"></div>' +
+        '<p class="note">' + m.nota + "</p>";
+
+      var iframe = document.createElement("iframe");
+      iframe.setAttribute("title", "Mail: " + m.titulo);
+      iframe.setAttribute("scrolling", "no");
+      iframe.srcdoc = renderCampaignHtml(Object.assign({}, m.c, {
+        name: chkNombre.checked ? "Valentina" : "",
+        images: fotos,
+        imageAlt: "The Third Place #2"
+      }));
+      iframe.addEventListener("load", function () {
+        try { iframe.style.height = iframe.contentDocument.body.scrollHeight + 8 + "px"; }
+        catch (e) { iframe.style.height = "720px"; }
+      });
+      card.querySelector(".frame").appendChild(iframe);
+      grid.appendChild(card);
+    });
+  }
+
+  chkNombre.addEventListener("change", build);
+  chkSinFoto.addEventListener("change", build);
+  build();
+</script>

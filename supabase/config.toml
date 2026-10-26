@@ -152,3 +152,10 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/cyber-unlock/deno.json"
 entrypoint = "./functions/cyber-unlock/index.ts"
+
+# Códigos de Navidad para quien compró en el Cyber. La dispara el cron el 7/11.
+[functions.navidad-codigos]
+enabled = true
+verify_jwt = false
+import_map = "./functions/navidad-codigos/deno.json"
+entrypoint = "./functions/navidad-codigos/index.ts"
