@@ -75,6 +75,12 @@ Deno.serve(async (req: Request) => {
     footnote: body?.footnote ? String(body.footnote) : undefined,
   };
 
+  const audiencia = ["compraron","no_compraron"].includes(String(body?.audiencia || ""))
+    ? String(body.audiencia)
+    : "todos";
+  const audienciaDesde = body?.audienciaDesde ? String(body.audienciaDesde) : "";
+  const audienciaHasta = body?.audienciaHasta ? String(body.audienciaHasta) : "";
+
   const dryRun = body?.dryRun === true;
   const testEmails = Array.isArray(body?.testEmails)
     ? (body.testEmails as unknown[]).map((e) => String(e).trim().toLowerCase()).filter(Boolean)
@@ -114,14 +120,50 @@ Deno.serve(async (req: Request) => {
 
   // --- Destinatarios reales -------------------------------------------------
   const res = await fetch(
-    `${supabaseUrl}/rest/v1/customers?select=email,display_name&unsubscribed=is.false&email=not.is.null&order=email`,
+    `${supabaseUrl}/rest/v1/customers?select=id,email,display_name&unsubscribed=is.false&email=not.is.null&order=email`,
     { headers: svcHeaders },
   );
   if (!res.ok) {
     console.error("Error leyendo customers:", res.status, await res.text());
     return json({ error: "No se pudo leer la lista de clientes" }, 500);
   }
-  const customers = (await res.json()) as { email: string; display_name: string | null }[];
+  let customers = (await res.json()) as { id: string; email: string; display_name: string | null }[];
+
+  // --- Segmentación por compras --------------------------------------------
+  // "compraron" / "no_compraron" miran las compras web registradas entre
+  // audiencia_desde y audiencia_hasta. Se usa stamp_events porque cada compra
+  // web deja una estrella con su fecha: no hace falta volver a consultar
+  // Tiendanube ni guardar ningún dato nuevo.
+  if (audiencia === "compraron" || audiencia === "no_compraron") {
+    let filtro = `source=in.(web_order,cyber_bonus)`;
+    if (audienciaDesde) filtro += `&created_at=gte.${encodeURIComponent(audienciaDesde)}`;
+    if (audienciaHasta) filtro += `&created_at=lte.${encodeURIComponent(audienciaHasta)}`;
+
+    const cr = await fetch(
+      `${supabaseUrl}/rest/v1/stamp_events?select=customer_id&${filtro}`,
+      { headers: svcHeaders },
+    );
+    if (!cr.ok) {
+      console.error("Error leyendo stamp_events:", cr.status, await cr.text());
+      return json({ error: "No se pudo calcular el segmento" }, 500);
+    }
+    const compradores = new Set(
+      ((await cr.json()) as { customer_id: string }[]).map((r) => r.customer_id),
+    );
+
+    customers = customers.filter((c) =>
+      audiencia === "compraron" ? compradores.has(c.id) : !compradores.has(c.id)
+    );
+
+    // Un segmento vacío casi siempre es un error de fechas, no un caso real.
+    // Mejor frenar y avisar que mandar una campaña a nadie en silencio.
+    if (customers.length === 0) {
+      return json(
+        { error: `El segmento "${audiencia}" no tiene a nadie. Revisá las fechas antes de mandar.` },
+        400,
+      );
+    }
+  }
 
   // Quiénes ya recibieron ESTA campaña (corrida anterior cortada a la mitad).
   const sentRes = await fetch(
@@ -153,6 +195,7 @@ Deno.serve(async (req: Request) => {
         destinatarios: pending.length,
         yaRecibieron: already.size,
         dadosDeBaja: customers.length === 0 ? "?" : undefined,
+        audiencia,
         muestra: pending.slice(0, 5).map((c) => maskEmail(c.email)),
         asunto: subject,
       },

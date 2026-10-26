@@ -32,7 +32,7 @@ Deno.serve(async (req: Request) => {
 
   const ahora = new Date().toISOString();
   const res = await fetch(
-    `${supabaseUrl}/rest/v1/campaigns?select=id,slug,subject,content,test_email` +
+    `${supabaseUrl}/rest/v1/campaigns?select=id,slug,subject,content,test_email,audiencia,audiencia_desde,audiencia_hasta` +
       `&sent_at=is.null&scheduled_at=lte.${encodeURIComponent(ahora)}` +
       `&order=scheduled_at&limit=${MAX_POR_CORRIDA}`,
     { headers: svcHeaders },
@@ -48,6 +48,9 @@ Deno.serve(async (req: Request) => {
     subject: string;
     content: Record<string, unknown>;
     test_email: string | null;
+    audiencia: string | null;
+    audiencia_desde: string | null;
+    audiencia_hasta: string | null;
   }[];
 
   if (pendientes.length === 0) return json({ ok: true, disparadas: 0 }, 200);
@@ -75,6 +78,11 @@ Deno.serve(async (req: Request) => {
       slug: c.slug,
       subject: c.subject,
     };
+    if (c.audiencia && c.audiencia !== "todos") {
+      body.audiencia = c.audiencia;
+      if (c.audiencia_desde) body.audienciaDesde = c.audiencia_desde;
+      if (c.audiencia_hasta) body.audienciaHasta = c.audiencia_hasta;
+    }
     if (c.test_email) body.testEmails = [c.test_email];
 
     let resultado: unknown;
