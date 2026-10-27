@@ -20,8 +20,9 @@ const VENCE = "2026-12-07";
 const VENCE_TEXTO = "7 de diciembre";
 const TIENDA_URL = "https://www.yokoo.com.ar/";
 
-// Ventana del Cyber, en UTC (Argentina es UTC-3).
-const CYBER_DESDE = "2026-10-31T03:00:00Z";
+// Ventana del Cyber, en UTC (Argentina es UTC-3). Arranca el VIERNES 30 a
+// las 20:00, que es cuando abre para el Club, no el sábado.
+const CYBER_DESDE = "2026-10-30T23:00:00Z";
 const CYBER_HASTA = "2026-11-05T02:59:59Z";
 
 // Tope por corrida: si algo sale mal, que no se desborde en un solo golpe.

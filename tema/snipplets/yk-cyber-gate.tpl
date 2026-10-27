@@ -130,14 +130,14 @@
 
   // Calendario. Hora de Argentina (UTC-3), expresado en UTC.
   //   26/10 00:00 -> fase 1: captación, con cuenta regresiva al 31
-  //   31/10 00:00 -> fase 2: el Cyber abre SÓLO para el Club (la barra es
+  //   30/10 20:00 -> fase 2: el Cyber abre SÓLO para el Club (la barra es
   //                  la puerta de entrada para quien no está registrado)
   //    1/11 00:00 -> fase 3: ya está abierto para todos, la barra deja de
   //                  ser una puerta y pasa a ser un aviso
   //    1/11 23:59 -> se apaga sola. Del 2 en adelante la web vuelve a ser
   //                  la de siempre y reaparece el pop-up de Yokoo Members.
   var INICIO_FASE_1 = Date.parse("2026-10-26T03:00:00Z");
-  var INICIO_FASE_2 = Date.parse("2026-10-31T03:00:00Z");
+  var INICIO_FASE_2 = Date.parse("2026-10-30T23:00:00Z");
   var INICIO_FASE_3 = Date.parse("2026-11-01T03:00:00Z");
   var FIN           = Date.parse("2026-11-02T02:59:59Z");
 

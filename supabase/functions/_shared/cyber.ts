@@ -6,14 +6,14 @@
 //
 // Las fechas son hora de Argentina (UTC-3, el país no tiene horario de verano),
 // expresadas acá en UTC para no depender de la zona horaria del servidor:
-//   sábado 31/10/2026 00:00 ART  = 2026-10-31T03:00:00Z
+//   viernes 30/10/2026 20:00 ART = 2026-10-30T23:00:00Z  (abre el Club)
 //   miércoles 4/11/2026 23:59:59 ART = 2026-11-05T02:59:59Z
 //
 // Para cambiar el período, tocar sólo estas dos constantes y volver a
 // desplegar las dos funciones que importan este archivo
 // (tn-webhook-order-paid y tn-backfill-stamps).
 
-export const CYBER_DESDE = Date.parse("2026-10-31T03:00:00.000Z");
+export const CYBER_DESDE = Date.parse("2026-10-30T23:00:00.000Z");
 export const CYBER_HASTA = Date.parse("2026-11-05T02:59:59.999Z");
 
 // Origen con el que se registra la estrella extra. Es un valor propio del enum
