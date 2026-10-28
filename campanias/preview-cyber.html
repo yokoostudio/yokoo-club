@@ -110,12 +110,11 @@
         <p>Yo venía usando $70.000, que es lo que tenía anotado de las sesiones de anuncios de octubre. Ya está corregido en los seis pies de página. <b>Revisá también tus anuncios de Meta</b>: si ahí dice $70.000, estás prometiendo un envío gratis que no das.</p>
       </div>
     </div>
-
     <div class="aviso">
       <span class="bar"></span>
       <div>
-        <h3>El mail del 7 sale solo, pero hay que construirlo antes del viaje</h3>
-        <p>Los otros cinco mandan el mismo texto a todos. Ese manda <b>un código distinto a cada persona</b>, así que no puede salir por el sistema de campañas: necesita su propia función que busque quién compró entre el 31 y el 4, cree un cupón único por cliente con vigencia al 7/12 y se lo mande con el código ya adentro del mail. Una vez hecha, la dispara el cron solo el 7 a la mañana — no hace falta que estés. Es el mismo mecanismo que ya usa el sistema de reseñas. <b>Lo que necesito saber es qué día te vas</b>, para tenerlo probado antes.</p>
+        <h3>El mail de los compradores pasó al jueves 12</h3>
+        <p>El código de Navidad para quienes compren en el Cyber estaba puesto para el sábado 7 y se movió al <b>jueves 12 a las 10:00</b>. Ese sale por su cuenta: lo dispara un cron de la base, no la tabla de campañas, y le llega sólo a quien haya comprado entre el viernes 30 a las 20:00 y el miércoles 4 a las 23:59.</p>
       </div>
     </div>
   </section>
@@ -276,12 +275,11 @@
         subject: "Hoy: 3x2 en remeras",
         headline: "3x2 en remeras, sólo hoy",
         paragraphs: [
-          "Llevás tres remeras y pagás dos. La más barata va de regalo.",
-          "Y en el resto —buzos, pantalones, camperas y accesorios— hasta 40% OFF.",
-          "Es sólo por hoy: mañana cambia."
+          "Pagá 2 remeras y llevate una de regalo. 100% elección tuya, beneficios exclusivos para vos.",
+          "Aprovechá la oportunidad y conseguí nuestras otras prendas con hasta 40% OFF. Sólo hoy, mañana cambia."
         ],
         ctaText: "Aprovechar el 3x2",
-        footnote: "El 3x2 aplica únicamente a remeras, incluidas las de The Third Place #2. " + PAGO
+        footnote: "El 3x2 aplica únicamente a remeras. " + PAGO
       }
     },
     {
@@ -290,11 +288,10 @@
       nota: "<b>cyber-05-40off.json</b> — \"Hasta 40%\" es cierto porque hay productos realmente al 40%. El segundo párrafo lo explica sin que suene a letra chica.",
       c: {
         subject: "Hasta 40% OFF",
-        headline: "Hasta 40% OFF",
+        headline: "Hasta 40% OFF, conseguí tus elegidos ya",
         paragraphs: [
-          "Hay prendas al 10, al 20, al 30 y al 40 por ciento.",
-          "Aprovechá a llevarte esa prenda que venís viendo y no te animás.",
-          "Te quedan dos días para sumar el doble de estrellas."
+          "Toda nuestra web con hasta 40% OFF. Aprovechá a llevarte esa prenda que tenés en el carrito. Descuento exclusivo, es hoy o nunca.",
+          "Sumá doble estrella y conseguí el siguiente nivel dentro del Club."
         ],
         ctaText: "Ver los descuentos",
         footnote: PAGO
@@ -306,11 +303,10 @@
       nota: "<b>cyber-06-ultimo-dia.json</b> — El último día suele ser de los que más convierten. Por eso el texto no despide el Cyber: pone una hora exacta.",
       c: {
         subject: "Último día del CyberYokoo",
-        headline: "Último día de CyberYokoo, es ahora",
+        headline: "Descuento hasta las 23:59, última oportunidad",
         paragraphs: [
-          "A las 23:59 vuelve todo a su precio de siempre.",
-          "Hasta 40% OFF, y es la última vez.",
-          "También es el último día en que cada compra te suma el doble de estrellas."
+          "Hasta 40% OFF, exclusivo Cyber. Sacate las ganas.",
+          "Sumá tus dos estrellas, última chance. Conseguí beneficios exclusivos dentro de nuestro Club."
         ],
         ctaText: "Última chance",
         footnote: PAGO
