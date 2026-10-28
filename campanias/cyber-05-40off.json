@@ -1,0 +1,17 @@
+{
+  "slug": "cyber-05-40off",
+  "subject": "Hasta 40% OFF",
+  "headline": "Hasta 40% OFF",
+  "paragraphs": [
+    "Hay prendas al 10, al 20, al 30 y al 40 por ciento.",
+    "Aprovechá a llevarte esa prenda que venís viendo y no te animás.",
+    "Te quedan dos días para sumar el doble de estrellas."
+  ],
+  "images": [
+    "https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/cyber-595.jpg"
+  ],
+  "imageAlt": "The Third Place #2 · Yokoo Studio",
+  "ctaText": "Ver los descuentos",
+  "ctaUrl": "https://www.yokoo.com.ar/cyber-yokoo-1lt17",
+  "footnote": "3 y 6 cuotas sin interés · 10% extra pagando por transferencia · Envío gratis desde $100.000."
+}

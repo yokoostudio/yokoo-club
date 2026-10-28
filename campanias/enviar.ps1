@@ -1,4 +1,4 @@
-# Dispara una campaña de mail a la lista del Club.
+﻿# Dispara una campaña de mail a la lista del Club.
 #
 #   .\enviar.ps1 -Archivo primavera-aviso.json -DryRun      <- cuenta, no manda
 #   .\enviar.ps1 -Archivo primavera-aviso.json -Prueba      <- sólo a tus casillas

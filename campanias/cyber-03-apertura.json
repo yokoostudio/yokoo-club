@@ -1,0 +1,16 @@
+{
+  "slug": "cyber-03-apertura",
+  "subject": "CyberYokoo para todos",
+  "headline": "CyberYokoo para todos",
+  "paragraphs": [
+    "Si no aprovechaste ayer, te toca hoy: sigue nuestro descuento escalonado.",
+    "Yo que vos no volvería a dormir."
+  ],
+  "images": [
+    "https://givnsohzgsugvrfuftcm.supabase.co/storage/v1/object/public/assets/cyber-421.jpg"
+  ],
+  "imageAlt": "The Third Place #2 · Yokoo Studio",
+  "ctaText": "Ver el Cyber",
+  "ctaUrl": "https://www.yokoo.com.ar/cyber-yokoo-1lt17",
+  "footnote": "3 y 6 cuotas sin interés · 10% extra pagando por transferencia · Envío gratis desde $100.000."
+}
