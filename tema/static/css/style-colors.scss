@@ -2365,8 +2365,13 @@ footer {
   .head-main.compress ~ .logo-svg-link {
     top: 35px !important;
   }
+  /* Igual que en desktop: este -140px hacía que la foto arrancara pegada
+     al header, y con una foto de pantalla completa no le sacaba nada. Con
+     el banner diseñado del Cyber el header le tapaba 140px de 457, el 31%
+     del alto, justo donde está el título. El banner tiene que verse
+     entero, así que arranca debajo del header. */
   .js-home-mobile-slider-visibility.mt-4 {
-    margin-top: -140px !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -3878,5 +3883,24 @@ html:not(.yk-third-place-live) a[href*="/the-third-place"] {
     padding: 2px 5px;
     margin-left: 7px;
     top: -2px;
+  }
+}
+
+/* Yokoo — carteles de promoción sobre la foto del producto, SOLO en celular.
+   Con un texto largo ("Hasta 35% OFF comprando en cantidad") el cartel caía
+   en tres renglones y quedaba de 133px de ancho sobre una foto de 142px:
+   medido, tapaba el 28% de la imagen. En una grilla de dos columnas eso es
+   justamente lo que la persona vino a mirar.
+   Se achica la letra, se ajusta el interlineado y se le pone un ancho
+   máximo para que nunca cruce la tarjeta de lado a lado. En desktop se deja
+   como está: ahí la foto es grande y el cartel no molesta. */
+@media (max-width: 767px) {
+  .js-item-product .js-promotion-label-private,
+  .js-item-product .label-accent {
+    font-size: 9px;
+    line-height: 11.5px;
+    padding: 3px 6px;
+    max-width: 72%;
+    letter-spacing: 0;
   }
 }
