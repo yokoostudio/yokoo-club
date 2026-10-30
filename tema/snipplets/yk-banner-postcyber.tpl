@@ -2,7 +2,7 @@
    Banner de la home: lo hace clickeable y lo cambia solo cuando termina el
    Cyber.
 
-   DOS PROBLEMAS, UN SNIPPET
+   TODO LO QUE PASA CUANDO TERMINA EL CYBER, EN UN SOLO LUGAR
 
    1) El banner no se puede clickear. El slide del panel no tiene enlace
       cargado, así que el tema no lo envuelve en un <a>: la imagen dice
@@ -25,6 +25,11 @@
    aspect-ratio en style-colors.scss. Si alguna vez se cambian por otras de
    distinta medida, hay que ajustar esos aspect-ratio o se vuelve a
    recortar.
+
+   3) El menú lateral muestra "CyberYokoo" con un cartel NEW rojo. Pasado
+      el 4 eso anuncia una promoción terminada, así que desde el 5 se
+      oculta ese renglón. La categoría sigue existiendo para quien tenga
+      el enlace; simplemente deja de ocupar el primer lugar del menú.
 
    PARA PROBARLO ANTES DE LA FECHA
      ?yk_postcyber=1   -> muestra ya el banner de The Third Place
@@ -100,6 +105,18 @@
       ".js-home-slider .slider-slide, .js-home-slider-mobile .slider-slide"
     );
     for (var k = 0; k < slides.length; k++) hacerClickeable(slides[k]);
+
+    // --- 3) el renglón del menú ------------------------------------------
+    // Terminado el Cyber, "CyberYokoo NEW" en rojo queda anunciando una
+    // promoción que ya no existe. Se oculta el renglón entero, no sólo el
+    // cartelito: la categoría sigue existiendo para quien tenga el link,
+    // pero deja de ocupar el primer lugar del menú.
+    if (terminoElCyber) {
+      var enMenu = document.querySelectorAll(
+        '.yokoo-drawer a[href*="cyber-yokoo"], .yokoo-drawer a[href*="cyber-yokoo-1lt17"]'
+      );
+      for (var n = 0; n < enMenu.length; n++) enMenu[n].style.display = "none";
+    }
 
     // Si el slide YA venía envuelto en un enlace del panel, se respeta el
     // que haya, salvo que el Cyber haya terminado: ahí apuntaría a ofertas
