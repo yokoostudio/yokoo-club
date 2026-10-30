@@ -47,7 +47,11 @@
   var NUEVA_DESKTOP = BASE + "banner-ttp2-desktop.jpg";
   var NUEVA_MOBILE  = BASE + "banner-ttp2-mobile.jpg";
 
-  var DESTINO_CYBER = "/cyber-yokoo-1lt17";
+  // El banner va siempre a la colección, antes y después del 5. Antes
+  // apuntaba a la categoría del Cyber; Juan lo pidió a /the-third-place el
+  // 30/10, que es donde está el drop (que también entra en las
+  // promociones del Cyber).
+  var DESTINO_CYBER = "/the-third-place";
   var DESTINO_DROP  = "/the-third-place";
   var ALT_DROP = "The Third Place #2 — New Collection";
 
