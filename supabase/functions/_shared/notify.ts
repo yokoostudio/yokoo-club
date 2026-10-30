@@ -160,6 +160,9 @@ export async function sendWelcomeCouponEmail(opts: {
   code: string;
   percent: string;
   appUrl: string;
+  // Sólo mientras la web está cerrada por el Cyber del Club. Fuera de esa
+  // ventana viene vacía y el mail queda como siempre.
+  claveWeb?: string;
 }): Promise<boolean> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) {
@@ -168,7 +171,13 @@ export async function sendWelcomeCouponEmail(opts: {
   }
 
   const name = opts.displayName || opts.toEmail.split("@")[0];
-  const html = renderWelcomeCouponHtml({ name, code: opts.code, percent: opts.percent, appUrl: opts.appUrl });
+  const html = renderWelcomeCouponHtml({
+    name,
+    code: opts.code,
+    percent: opts.percent,
+    appUrl: opts.appUrl,
+    claveWeb: opts.claveWeb,
+  });
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -195,7 +204,23 @@ export async function sendWelcomeCouponEmail(opts: {
   }
 }
 
-function renderWelcomeCouponHtml(opts: { name: string; code: string; percent: string; appUrl: string }): string {
+function renderWelcomeCouponHtml(opts: {
+  name: string;
+  code: string;
+  percent: string;
+  appUrl: string;
+  claveWeb?: string;
+}): string {
+  // Mientras dura el Cyber del Club la tienda está cerrada con contraseña.
+  // Sin este bloque, la persona se registra, recibe su cupón y no puede
+  // entrar a usarlo. Fuera de esa ventana no se dibuja nada.
+  const bloqueClave = opts.claveWeb
+    ? `<table role="presentation" width="100%" style="margin:0 0 18px;"><tr><td style="background:rgba(246,239,163,.08); border:1px dashed rgba(246,239,163,.45); border-radius:12px; padding:14px 12px; text-align:center;">` +
+      `<p style="margin:0 0 6px; color:rgba(246,239,163,.75); font-size:12px; line-height:1.45;">Estos días la tienda está abierta sólo para el Club. Esta es tu contraseña para entrar:</p>` +
+      `<p style="margin:0; color:#f6efa3; font-size:22px; font-weight:800; letter-spacing:2px; word-break:break-all;">${escapeHtml(opts.claveWeb)}</p>` +
+      `</td></tr></table>`
+    : "";
+
   return `<!doctype html>
 <html lang="es">
 <head><meta charset="utf-8" /></head>
@@ -210,6 +235,7 @@ function renderWelcomeCouponHtml(opts: { name: string; code: string; percent: st
       <p style="margin:0 0 22px; color:rgba(246,239,163,.85); font-size:14px; line-height:1.5;">Como regalo de bienvenida, tenés un ${opts.percent}% de descuento exclusivo para tu primera compra.</p>
       <p style="margin:0 0 8px; color:rgba(246,239,163,.6); font-size:11px; text-transform:uppercase; letter-spacing:.08em;">Tu código</p>
       <p style="margin:0 0 22px; color:#f6efa3; font-size:26px; font-weight:800; letter-spacing:2px;">${escapeHtml(opts.code)}</p>
+      ${bloqueClave}
       <a href="${opts.appUrl}" style="display:inline-block; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:12px 22px; border-radius:999px;">Ver mi credencial</a>
       <p style="margin:18px 0 0; color:rgba(246,239,163,.55); font-size:11px;">Además, cada compra suma una estrella para tu premio sorpresa.</p>
     </td></tr>

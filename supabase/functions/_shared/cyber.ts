@@ -23,6 +23,17 @@ export const CYBER_HASTA = Date.parse("2026-11-05T02:59:59.999Z");
 // además deja claro en el historial de dónde salió cada una.
 export const CYBER_SOURCE = "cyber_bonus";
 
+// Ventana en la que la web entera está cerrada con la contraseña de
+// Tiendanube y sólo entra el Club. Mientras dura, el mail de bienvenida
+// lleva la contraseña adentro: si no, alguien se registra para entrar al
+// Cyber, recibe su cupón y se choca con la pantalla de contraseña.
+//   viernes 30/10 20:00 ART  = 2026-10-30T23:00:00Z
+//   sábado  31/10 23:59 ART  = 2026-11-01T02:59:59Z
+// Pasada esa hora la web abre para todos y esto se apaga solo: no hay que
+// acordarse de sacar nada.
+export const CLAVE_DESDE = Date.parse("2026-10-30T23:00:00.000Z");
+export const CLAVE_HASTA = Date.parse("2026-11-01T02:59:59.999Z");
+
 // ¿Esta compra cae dentro de la ventana? Recibe la fecha del PEDIDO, no la de
 // hoy: así un pedido del Cyber sigue valiendo doble aunque la estrella se
 // registre más tarde (por ejemplo cuando alguien que compró sin cuenta se

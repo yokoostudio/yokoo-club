@@ -14,6 +14,7 @@ const CORS_HEADERS = {
 };
 
 import { sendWelcomeCouponEmail } from "../_shared/notify.ts";
+import { CLAVE_DESDE, CLAVE_HASTA } from "../_shared/cyber.ts";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
@@ -96,8 +97,33 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true, sent: false, reason: "error creando cupón" }, 200);
   }
 
-  // 4) Mandar el mail con el código real.
+  // 4) Mientras la web está cerrada por el Cyber del Club, el mail lleva
+  // también la contraseña de la tienda: si no, la persona se acaba de
+  // registrar para entrar y se choca con la pantalla de contraseña. La
+  // clave vive en public.settings para poder cambiarla sin redesplegar, y
+  // NO en el código: este repositorio es público.
+  let claveWeb: string | undefined;
+  const ahora = Date.now();
+  if (ahora >= CLAVE_DESDE && ahora <= CLAVE_HASTA) {
+    try {
+      const r = await fetch(
+        `${supabaseUrl}/rest/v1/settings?select=value&key=eq.clave_web_cyber`,
+        { headers: svcHeaders },
+      );
+      if (r.ok) {
+        const filas = (await r.json()) as { value: string }[];
+        if (filas.length && filas[0].value) claveWeb = filas[0].value;
+      }
+    } catch (e) {
+      // Si no se puede leer, el mail sale igual, sin la contraseña: es
+      // mejor un mail de bienvenida incompleto que ninguno.
+      console.error("No pude leer clave_web_cyber:", e);
+    }
+  }
+
+  // 5) Mandar el mail con el código real.
   const emailSent = await sendWelcomeCouponEmail({
+    claveWeb,
     toEmail: customer.email,
     displayName: customer.display_name,
     code,
