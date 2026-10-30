@@ -456,6 +456,11 @@ export type CampaignContent = {
   ctaText?: string;
   ctaUrl?: string;
   footnote?: string;
+  // Un dato que la persona tiene que leer y copiar: la contraseña de la web,
+  // un cupón. Va en un bloque aparte, grande, porque dentro de un párrafo se
+  // pierde y el que no lo encuentra no entra.
+  codigo?: string;
+  codigoLabel?: string;
 };
 
 export type CampaignRecipient = {
@@ -519,6 +524,13 @@ export function renderCampaignHtml(opts: CampaignContent & { name: string; unsub
     opts.imageAlt || "",
   );
 
+  const codigo = opts.codigo
+    ? `<table role="presentation" width="100%" style="margin:0 0 18px;"><tr><td style="background:rgba(246,239,163,.08); border:1px dashed rgba(246,239,163,.45); border-radius:12px; padding:14px 12px; text-align:center;">` +
+      `<p style="margin:0 0 6px; color:rgba(246,239,163,.6); font-size:11px; text-transform:uppercase; letter-spacing:.08em;">${escapeHtml(opts.codigoLabel || "Tu contraseña")}</p>` +
+      `<p style="margin:0; color:#f6efa3; font-size:24px; font-weight:800; letter-spacing:2px; word-break:break-all;">${escapeHtml(opts.codigo)}</p>` +
+      `</td></tr></table>`
+    : "";
+
   const cta =
     opts.ctaText && opts.ctaUrl
       ? `<a href="${opts.ctaUrl}" style="display:inline-block; margin-top:8px; background:#f6efa3; color:#3a2115; text-decoration:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:13px 24px; border-radius:999px;">${escapeHtml(opts.ctaText)}</a>`
@@ -541,6 +553,7 @@ export function renderCampaignHtml(opts: CampaignContent & { name: string; unsub
       ${opts.name ? `<p style="margin:0 0 6px; color:rgba(246,239,163,.75); font-size:14px;">Hola ${escapeHtml(opts.name)},</p>` : ""}
       <p style="margin:0 0 16px; color:#f6efa3; font-size:21px; font-weight:800; line-height:1.3;">${escapeHtml(opts.headline)}</p>
       ${paragraphs}
+      ${codigo}
       ${cta}
       ${footnote}
     </td></tr>
@@ -563,6 +576,7 @@ function renderCampaignText(opts: CampaignContent & { name: string; unsubUrl: st
   if (opts.name) lineas.push(`Hola ${opts.name},`, "");
   lineas.push(opts.headline, "");
   for (const p of opts.paragraphs) lineas.push(p, "");
+  if (opts.codigo) lineas.push(`${opts.codigoLabel || "Tu contraseña"}: ${opts.codigo}`, "");
   if (opts.ctaText && opts.ctaUrl) lineas.push(`${opts.ctaText}: ${opts.ctaUrl}`, "");
   if (opts.footnote) lineas.push(opts.footnote, "");
   lineas.push(

@@ -31,6 +31,17 @@ if (-not (Test-Path $rutaJson)) { throw "No encuentro el archivo de campaña: $A
 
 $campania = Get-Content -Raw -Encoding UTF8 $rutaJson | ConvertFrom-Json
 
+# La contraseña de la web NO vive en el .json: este repo es PÚBLICO. En el
+# archivo queda el marcador __CLAVE_WEB__ y acá se reemplaza por el valor
+# real, que está en ..\.secrets\ (ignorado por git).
+if ($campania.codigo -eq "__CLAVE_WEB__") {
+  $rutaClave = Join-Path $raiz ".secrets\clave-web-cyber.txt"
+  if (-not (Test-Path $rutaClave)) {
+    throw "Esta campaña lleva la contraseña de la web y falta .secrets\clave-web-cyber.txt"
+  }
+  $campania.codigo = (Get-Content -Raw $rutaClave).Trim()
+}
+
 if ($DryRun) { $campania | Add-Member -NotePropertyName dryRun -NotePropertyValue $true -Force }
 if ($Prueba) { $campania | Add-Member -NotePropertyName testEmails -NotePropertyValue $CASILLAS_DE_PRUEBA -Force }
 

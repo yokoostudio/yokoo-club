@@ -73,6 +73,8 @@ Deno.serve(async (req: Request) => {
     ctaText: body?.ctaText ? String(body.ctaText) : undefined,
     ctaUrl: body?.ctaUrl ? String(body.ctaUrl) : undefined,
     footnote: body?.footnote ? String(body.footnote) : undefined,
+    codigo: body?.codigo ? String(body.codigo) : undefined,
+    codigoLabel: body?.codigoLabel ? String(body.codigoLabel) : undefined,
   };
 
   const audiencia = ["compraron","no_compraron"].includes(String(body?.audiencia || ""))
