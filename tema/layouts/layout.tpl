@@ -889,5 +889,6 @@
         {% include "snipplets/yk-stock-badge.tpl" %}
         {% include "snipplets/yk-cyber-gate.tpl" %}
         {% include "snipplets/yk-banner-postcyber.tpl" %}
+        {% include "snipplets/yk-carrito-recomendados.tpl" %}
     </body>
 </html>
