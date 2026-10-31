@@ -37,10 +37,19 @@
   .yk-reco-flecha:hover { opacity: 1; }
   .yk-reco-flecha:disabled { opacity: .25; cursor: default; }
   .yk-reco-flecha svg { width: 13px; height: 13px; display: block; }
-  /* La barra de scroll se oculta en los tres motores. Se sigue pudiendo
-     arrastrar con el dedo en el celular; en escritorio están las flechas. */
-  .yk-reco-fila { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
-  .yk-reco-fila::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  /* La barra se ve, pero sin la pista blanca que traía el navegador por
+     defecto: ésa era la que cortaba el panel. El pulgar usa el color del
+     texto, así que se adapta solo al fondo del carrito. */
+  .yk-reco-fila {
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: currentColor transparent;
+  }
+  .yk-reco-fila::-webkit-scrollbar { height: 5px; }
+  .yk-reco-fila::-webkit-scrollbar-track { background: transparent; border: 0; }
+  .yk-reco-fila::-webkit-scrollbar-thumb { background: currentColor; opacity: .4; border-radius: 999px; }
+  .yk-reco-fila::-webkit-scrollbar-corner { background: transparent; }
   /* El color va forzado en los cuatro estados. El tema le da otro color a
      los enlaces ya visitados, y sobre el fondo oscuro del carrito eso dejaba
      el nombre y el precio en gris oscuro, casi ilegibles -- justo en los
