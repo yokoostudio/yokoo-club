@@ -27,7 +27,20 @@
 <style>
   .yk-reco { border-top: 1px solid rgba(0,0,0,.08); margin-top: 18px; padding-top: 16px; }
   .yk-reco-titulo { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 12px; opacity: .75; }
-  .yk-reco-fila { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+  .yk-reco-cabecera { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .yk-reco-flechas { display: flex; gap: 6px; }
+  .yk-reco-flecha {
+    width: 26px; height: 26px; border-radius: 999px; border: 0; cursor: pointer;
+    background: currentColor; display: inline-flex; align-items: center; justify-content: center;
+    padding: 0; opacity: .85; transition: opacity .15s;
+  }
+  .yk-reco-flecha:hover { opacity: 1; }
+  .yk-reco-flecha:disabled { opacity: .25; cursor: default; }
+  .yk-reco-flecha svg { width: 13px; height: 13px; display: block; }
+  /* La barra de scroll se oculta en los tres motores. Se sigue pudiendo
+     arrastrar con el dedo en el celular; en escritorio están las flechas. */
+  .yk-reco-fila { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
+  .yk-reco-fila::-webkit-scrollbar { width: 0; height: 0; display: none; }
   /* El color va forzado en los cuatro estados. El tema le da otro color a
      los enlaces ya visitados, y sobre el fondo oscuro del carrito eso dejaba
      el nombre y el precio en gris oscuro, casi ilegibles -- justo en los
@@ -182,7 +195,19 @@
       else cuerpo.appendChild(cont);
     }
 
-    var html = '<p class="yk-reco-titulo">Sumá a tu compra</p><div class="yk-reco-fila">';
+    var flecha = function (dir) {
+      // El triángulo se dibuja con el color del panel para que contraste
+      // contra el círculo, que usa currentColor.
+      var d = dir === "izq" ? "M9.5 2.5 L4.5 7 L9.5 11.5" : "M4.5 2.5 L9.5 7 L4.5 11.5";
+      return '<button type="button" class="yk-reco-flecha" data-dir="' + dir + '" aria-label="' +
+        (dir === "izq" ? "Anteriores" : "Siguientes") + '">' +
+        '<svg viewBox="0 0 14 14" fill="none" stroke="rgba(58,33,21,.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>' +
+        "</button>";
+    };
+
+    var html = '<div class="yk-reco-cabecera"><p class="yk-reco-titulo" style="margin:0">Sumá a tu compra</p>' +
+      '<div class="yk-reco-flechas">' + flecha("izq") + flecha("der") + "</div></div>" +
+      '<div class="yk-reco-fila">';
     for (var i = 0; i < elegidos.length; i++) {
       var p = elegidos[i];
       html += '<a class="yk-reco-item" href="' + escapar(p.url) + '">' +
@@ -192,11 +217,69 @@
     }
     html += "</div>";
     cont.innerHTML = html;
+
+    // Las flechas mueven la fila de a un ancho visible, y se apagan al
+    // llegar a cada punta para no ofrecer un movimiento que no pasa.
+    var fila = cont.querySelector(".yk-reco-fila");
+    var botones = cont.querySelectorAll(".yk-reco-flecha");
+
+    // El salto es directo, sin animación. Se probaron las tres formas de
+    // hacerlo suave -- "scroll-behavior: smooth" en el CSS, scrollTo con
+    // behavior smooth, y una animación propia con requestAnimationFrame --
+    // y ninguna es confiable: con "reducir movimiento" activado, o con la
+    // pestaña en segundo plano, la animación no arranca y la fila se queda
+    // clavada, sin forma de moverla. Con seis productos el salto se lee
+    // bien, y nunca falla.
+    function deslizar(destino) {
+      var max = fila.scrollWidth - fila.clientWidth;
+      fila.scrollLeft = Math.max(0, Math.min(destino, max));
+      refrescar();
+    }
+
+    function refrescar() {
+      // Con el panel cerrado los anchos valen 0. Sin esta guarda, refrescar
+      // corría en ese momento, calculaba que no hay nada que desplazar y
+      // dejaba las dos flechas deshabilitadas -- y una flecha deshabilitada
+      // no responde al clic, así que ya no había forma de reactivarlas.
+      if (!fila.clientWidth) return;
+      var max = fila.scrollWidth - fila.clientWidth - 1;
+      botones[0].disabled = fila.scrollLeft <= 0;
+      botones[1].disabled = fila.scrollLeft >= max;
+      cont.querySelector(".yk-reco-flechas").style.display = max > 2 ? "flex" : "none";
+    }
+    for (var b = 0; b < botones.length; b++) {
+      botones[b].addEventListener("click", function () {
+        var paso = Math.max(fila.clientWidth - 40, 120);
+        var destino = fila.scrollLeft + (this.getAttribute("data-dir") === "izq" ? -paso : paso);
+        deslizar(destino);
+      });
+    }
+    fila.addEventListener("scroll", refrescar);
+    window.addEventListener("resize", refrescar);
+    // El panel se abre con una animación: se vuelve a medir unas cuantas
+    // veces hasta que tiene ancho de verdad.
+    refrescar();
+    [120, 350, 700, 1200].forEach(function (ms) { setTimeout(refrescar, ms); });
   }
 
   var pintando = false;
-  function actualizar() {
+  var firmaAnterior = "";
+
+  // Qué hay en el carrito, resumido. Sirve para no volver a dibujar cuando
+  // no cambió nada: dibujar de nuevo barajaría los productos delante de la
+  // persona y le devolvería la fila al principio mientras la está mirando.
+  function firma() {
+    var items = document.querySelectorAll('.js-ajax-cart-list a[href*="/productos/"]');
+    var out = [];
+    for (var i = 0; i < items.length; i++) out.push(items[i].getAttribute("href"));
+    return out.join("|");
+  }
+
+  function actualizar(forzar) {
     if (pintando) return;
+    var f = firma();
+    if (!forzar && f === firmaAnterior) return;
+    firmaAnterior = f;
     pintando = true;
     candidatos().then(function (lista) {
       if (lista && lista.length) pintar(lista);
@@ -212,17 +295,27 @@
     var modal = document.getElementById("modal-cart");
     if (!modal || !window.MutationObserver) return;
     var t = null;
+    // Se mira SOLO la lista de productos del carrito, no todo el panel: si
+    // se observara el panel entero, el propio dibujado de esta sección
+    // dispararía el observador y se volvería a dibujar en bucle.
+    var lista = modal.querySelector(".js-ajax-cart-list") || modal;
     new MutationObserver(function () {
       clearTimeout(t);
-      t = setTimeout(actualizar, 250);
-    }).observe(modal, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "style"] });
+      t = setTimeout(function () { actualizar(false); }, 250);
+    }).observe(lista, { childList: true, subtree: true });
+
+    // Abrir el carrito sí vuelve a barajar, que es lo que hace que no
+    // muestre siempre los mismos.
+    var abridor = document.querySelector(".js-cart-widget-amount");
+    var boton = abridor ? abridor.closest("a,button") : null;
+    if (boton) boton.addEventListener("click", function () { setTimeout(function () { actualizar(true); }, 400); });
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () { observar(); actualizar(); });
+    document.addEventListener("DOMContentLoaded", function () { observar(); actualizar(true); });
   } else {
     observar();
-    actualizar();
+    actualizar(true);
   }
 })();
 </script>
