@@ -249,11 +249,11 @@
                     <div class="yokoo-drawer-grupo yokoo-drawer-grupo--cyber">
                         <div class="yokoo-drawer-grupo-fila">
                             <a href="/cyberyokoo" style="transition-delay:.02s">{{ 'CyberYokoo' | translate }}<span class="yokoo-drawer-new yokoo-drawer-new--cyber">{{ 'NEW' | translate }}</span></a>
-                            <button type="button" class="yokoo-drawer-flecha" aria-expanded="false" aria-label="{{ 'Ver los descuentos del Cyber' | translate }}">
+                            <button type="button" class="yokoo-drawer-flecha" hidden aria-expanded="false" aria-label="{{ 'Ver los descuentos del Cyber' | translate }}">
                                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9.5L12 15.5L18 9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                         </div>
-                        <div class="yokoo-drawer-sub"><div>
+                        <div class="yokoo-drawer-sub" hidden><div>
                             <a href="/cyber-10off">{{ '10% OFF' | translate }}</a>
                             <a href="/cyber-15off">{{ '15% OFF' | translate }}</a>
                             <a href="/cyber-20off">{{ '20% OFF' | translate }}</a>
@@ -294,6 +294,24 @@
 
             var grupo = drawer.querySelector('.yokoo-drawer-grupo');
             var flecha = grupo ? grupo.querySelector('.yokoo-drawer-flecha') : null;
+
+            {# Las seis categorías de descuento recién existen el lunes: hasta
+               entonces el renglón del Cyber es un link común, sin flecha ni
+               lista. En el HTML están ocultas y acá se destapan solas cuando
+               llega la fecha. Se van solas el 5 junto con todo el bloque
+               (ver snipplets/yk-banner-postcyber.tpl).
+               Para verlo antes: ?yk_sub=1   Para taparlo: ?yk_sub=0 #}
+            var sub = grupo ? grupo.querySelector('.yokoo-drawer-sub') : null;
+            var DESDE_SUB = Date.parse('2026-11-02T03:00:00Z'); // 2/11 00:00 en Argentina
+            var forzarSub = new URLSearchParams(window.location.search).get('yk_sub');
+            var mostrarSub = forzarSub === '1' ||
+                (forzarSub !== '0' && Date.now() >= DESDE_SUB);
+            if (mostrarSub) {
+                if (sub) sub.removeAttribute('hidden');
+                if (flecha) flecha.removeAttribute('hidden');
+            } else {
+                flecha = null; // sin flecha no hay nada que enganchar más abajo
+            }
 
             function plegarGrupo(){
                 if (!grupo) return;

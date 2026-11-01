@@ -3900,6 +3900,9 @@ html:not(.yk-third-place-live) a[href*="/the-third-place"] {
   width: 20px;
   height: 20px;
 }
+.yokoo-drawer-sub[hidden] {
+  display: none;
+}
 .yokoo-drawer-sub {
   display: grid;
   grid-template-rows: 0fr;
