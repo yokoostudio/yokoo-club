@@ -68,9 +68,11 @@
     opacity: .82;
   }
 
-  /* Seis cuadrados de verdad: aspect-ratio 1 los mantiene cuadrados en
-     cualquier ancho, sin tener que fijar una altura que después queda mal
-     en otro teléfono. */
+  /* El alto sale de una proporción y no de un número fijo, así se acomoda
+     a cualquier ancho de pantalla sin quedar mal en un teléfono distinto.
+     Cuadrados quedaban enormes, sobre todo en el celular: en computadora
+     son apaisados (3:2) y en el celular más chatos todavía (2:1), donde
+     entran de a dos y cada uno se lleva medio ancho de pantalla. */
   .yk-grilla-descuentos {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -80,7 +82,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 1;
+    aspect-ratio: 3 / 2;
     border-radius: 18px;
     background: #fff098;
     color: #3a2115;
@@ -98,11 +100,12 @@
 
   @media (max-width: 991px) {
     .yk-grilla-descuentos { grid-template-columns: repeat(3, 1fr); }
+    .yk-grilla-descuentos a { aspect-ratio: 2 / 1; }
   }
   @media (max-width: 575px) {
     .yk-grilla { padding: 22px 0 6px; }
     .yk-grilla-descuentos { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .yk-grilla-descuentos a { font-size: 22px; border-radius: 14px; }
+    .yk-grilla-descuentos a { font-size: 22px; border-radius: 14px; aspect-ratio: 2 / 1; }
     .yk-grilla-3x2 { min-height: 128px; padding: 22px 16px; border-radius: 18px; }
     .yk-grilla-3x2 b { font-size: 32px; }
     .yk-grilla-3x2 span { font-size: 13px; }
