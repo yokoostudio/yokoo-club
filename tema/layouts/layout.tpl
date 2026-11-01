@@ -749,11 +749,14 @@
                si alguno de esos dos ya está abierto en el momento en que
                le toca aparecer. #}
             if (!document.body.classList.contains('template-home')) return;
-            // Yokoo -- pausado durante la campaña del Cyber (26/10 al 1/11, hora
-            // de Argentina): esos días la barra roja del Cyber es el único pedido
-            // de registro, para no superponer dos mensajes. Se reactiva solo.
+            // Yokoo -- pausado durante toda la campaña del Cyber (26/10 al 4/11,
+            // hora de Argentina): esos días la barra roja del Cyber es el único
+            // pedido de registro, para no superponer dos mensajes. Se reactiva
+            // solo el 5, junto con el resto de la web.
+            // (Estaba hasta el 1/11, pero el Cyber sigue hasta el 4: del 2 al 4
+            // el pop-up y la barra habrían pedido lo mismo al mismo tiempo.)
             var _hoy = Date.now();
-            if (_hoy >= Date.parse('2026-10-26T03:00:00Z') && _hoy <= Date.parse('2026-11-02T02:59:59Z')) return;
+            if (_hoy >= Date.parse('2026-10-26T03:00:00Z') && _hoy <= Date.parse('2026-11-05T02:59:59Z')) return;
             var popup = document.getElementById('yokooMembersPopup');
             var scrim = document.getElementById('yokooMembersScrim');
             var closeBtn = document.getElementById('yokooMembersClose');
