@@ -241,7 +241,27 @@
                     <svg viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="15.83" stroke="currentColor" stroke-width="2"/><path d="M24.54 19H15.04" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.21 14.25L13.46 19L18.21 23.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
                 <nav>
-                    <a href="/cyberyokoo" style="transition-delay:.02s">{{ 'CyberYokoo' | translate }}<span class="yokoo-drawer-new yokoo-drawer-new--cyber">{{ 'NEW' | translate }}</span></a>
+                    {# El CyberYokoo despliega las seis categorías de descuento al
+                       pasar el cursor por encima. El título sigue llevando a la
+                       categoría general: la flecha es sólo para abrir la lista,
+                       que es la única forma de hacerlo en el celular, donde no
+                       hay cursor. #}
+                    <div class="yokoo-drawer-grupo yokoo-drawer-grupo--cyber">
+                        <div class="yokoo-drawer-grupo-fila">
+                            <a href="/cyberyokoo" style="transition-delay:.02s">{{ 'CyberYokoo' | translate }}<span class="yokoo-drawer-new yokoo-drawer-new--cyber">{{ 'NEW' | translate }}</span></a>
+                            <button type="button" class="yokoo-drawer-flecha" aria-expanded="false" aria-label="{{ 'Ver los descuentos del Cyber' | translate }}">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9.5L12 15.5L18 9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                        </div>
+                        <div class="yokoo-drawer-sub"><div>
+                            <a href="/cyber-10off">{{ '10% OFF' | translate }}</a>
+                            <a href="/cyber-15off">{{ '15% OFF' | translate }}</a>
+                            <a href="/cyber-20off">{{ '20% OFF' | translate }}</a>
+                            <a href="/cyber-25off">{{ '25% OFF' | translate }}</a>
+                            <a href="/cyber-30off">{{ '30% OFF' | translate }}</a>
+                            <a href="/cyber-40off">{{ '40% OFF' | translate }}</a>
+                        </div></div>
+                    </div>
                     <a href="/the-third-place" style="transition-delay:.04s">{{ 'The Third Place' | translate }}<span class="yokoo-drawer-new">{{ 'NEW' | translate }}</span></a>
                     <a href="/winter-sale/" style="transition-delay:.06s">{{ 'Winter Sale' | translate }}</a>
                     <a href="/bestsellers/" style="transition-delay:.08s">{{ 'Bestsellers' | translate }}</a>
@@ -272,6 +292,15 @@
             var closeBtn = document.getElementById('yokooDrawerClose');
             if (!scrim || !drawer || !closeBtn) return;
 
+            var grupo = drawer.querySelector('.yokoo-drawer-grupo');
+            var flecha = grupo ? grupo.querySelector('.yokoo-drawer-flecha') : null;
+
+            function plegarGrupo(){
+                if (!grupo) return;
+                grupo.classList.remove('abierto');
+                if (flecha) flecha.setAttribute('aria-expanded', 'false');
+            }
+
             function openDrawer(){
                 scrim.classList.add('show');
                 drawer.classList.add('show');
@@ -279,6 +308,15 @@
             function closeDrawer(){
                 scrim.classList.remove('show');
                 drawer.classList.remove('show');
+                plegarGrupo();
+            }
+
+            if (flecha) {
+                flecha.addEventListener('click', function(e){
+                    e.preventDefault();
+                    var abierto = grupo.classList.toggle('abierto');
+                    flecha.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+                });
             }
 
             var menuBtn = document.querySelector('[data-toggle="#nav-hamburger"]');

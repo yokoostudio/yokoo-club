@@ -3867,6 +3867,80 @@ html:not(.yk-third-place-live) a[href*="/the-third-place"] {
   color: #ffffff;
 }
 
+/* Yokoo — las seis categorías de descuento colgando del CyberYokoo en el
+   cajón lateral. Se abren al pasar el cursor por el renglón; en celular no
+   hay cursor, así que la flecha de la derecha hace lo mismo con un toque y
+   el título sigue llevando a la categoría general.
+
+   El alto se anima con grid-template-rows (0fr -> 1fr) en vez de
+   max-height: así abre exactamente hasta donde llega el contenido, sin
+   tener que adivinar un número que después queda mal si se suma o se saca
+   una categoría. El navegador que no sepa animarlo abre y cierra igual,
+   nada más que de golpe. */
+.yokoo-drawer-grupo-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.yokoo-drawer-flecha {
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  line-height: 0;
+  cursor: pointer;
+  color: #fff;
+  opacity: 0;
+  transition: opacity .4s ease, transform .25s ease;
+}
+.yokoo-drawer.show .yokoo-drawer-flecha {
+  opacity: .55;
+}
+.yokoo-drawer-flecha svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.yokoo-drawer-sub {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .3s ease;
+}
+.yokoo-drawer-sub > div {
+  overflow: hidden;
+  padding-left: 2px;
+}
+.yokoo-drawer-grupo.abierto .yokoo-drawer-sub {
+  grid-template-rows: 1fr;
+}
+.yokoo-drawer.show .yokoo-drawer-grupo.abierto .yokoo-drawer-flecha {
+  opacity: 1;
+  transform: rotate(180deg);
+}
+/* Sólo donde hay cursor de verdad: en una pantalla táctil el :hover se
+   queda pegado después de tocar y la lista no se cerraría más. */
+@media (hover: hover) {
+  .yokoo-drawer-grupo:hover .yokoo-drawer-sub {
+    grid-template-rows: 1fr;
+  }
+  .yokoo-drawer.show .yokoo-drawer-grupo:hover .yokoo-drawer-flecha {
+    opacity: 1;
+    transform: rotate(180deg);
+  }
+}
+/* Pelea de especificidad: la regla que hace aparecer los links del cajón es
+   `.yokoo-drawer.show .yokoo-drawer-content nav a`, así que para cambiarles
+   el tamaño y la opacidad hay que repetir ese camino entero. */
+.yokoo-drawer.show .yokoo-drawer-content nav .yokoo-drawer-sub a {
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.55;
+  padding-left: 16px;
+  opacity: .72;
+}
+.yokoo-drawer.show .yokoo-drawer-content nav .yokoo-drawer-sub a:hover {
+  opacity: 1;
+}
+
 /* En celular el cajón es angosto y "The Third Place" + el cartelito no
    entraban en un renglón (el texto solo ya ocupa ~90% del ancho útil), así
    que el NEW caía solo a una segunda línea y parecía un error. Se gana el

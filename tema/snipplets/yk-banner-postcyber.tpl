@@ -115,7 +115,11 @@
     // cartelito: la categoría sigue existiendo para quien tenga el link,
     // pero deja de ocupar el primer lugar del menú.
     if (terminoElCyber) {
+      // Se esconde el bloque entero (título + las seis categorías de
+      // descuento), no sólo el enlace del título: si no, quedarían los seis
+      // descuentos sueltos arriba de todo el menú.
       var enMenu = document.querySelectorAll(
+        '.yokoo-drawer-grupo--cyber, ' +
         '.yokoo-drawer a[href*="cyberyokoo"], .yokoo-drawer a[href*="cyber-yokoo"]'
       );
       for (var n = 0; n < enMenu.length; n++) enMenu[n].style.display = "none";
