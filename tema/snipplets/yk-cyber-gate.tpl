@@ -6,7 +6,10 @@
 
    Parámetros para probar:
      ?yk_gate=1            -> fase 1 (captación previa), barra abajo
-     ?yk_gate=1&fase=2     -> fase 2 (Cyber abierto, 31/10)
+     ?yk_gate=1&fase=2     -> fase 2 (Cyber abierto sólo para el Club)
+     ?yk_gate=1&fase=4     -> fase 4 (3x2 en remeras, lunes 2)
+     ?yk_gate=1&fase=5     -> fase 5 (hasta 40% OFF, martes 3)
+     ?yk_gate=1&fase=6     -> fase 6 (último día, miércoles 4)
      ?yk_gate=1&pos=arriba -> barra pegada arriba en vez de abajo
      ?yk_gate=1&modal=1    -> fuerza el modal aunque ya lo hayas cerrado
 
@@ -134,12 +137,21 @@
   //                  la puerta de entrada para quien no está registrado)
   //    1/11 00:00 -> fase 3: ya está abierto para todos, la barra deja de
   //                  ser una puerta y pasa a ser un aviso
-  //    1/11 23:59 -> se apaga sola. Del 2 en adelante la web vuelve a ser
+  //    2/11 00:00 -> fase 4: 3x2 en remeras, sólo ese día
+  //    3/11 00:00 -> fase 5: hasta 40% OFF
+  //    4/11 00:00 -> fase 6: último día
+  //    4/11 23:59 -> se apaga sola. Del 5 en adelante la web vuelve a ser
   //                  la de siempre y reaparece el pop-up de Yokoo Members.
+  //
+  // Las fases 4, 5 y 6 se agregaron el 1/11: la barra se apagaba esa
+  // medianoche y el Cyber seguía tres días más sin ningún aviso en la web.
   var INICIO_FASE_1 = Date.parse("2026-10-26T03:00:00Z");
   var INICIO_FASE_2 = Date.parse("2026-10-30T23:00:00Z");
   var INICIO_FASE_3 = Date.parse("2026-11-01T03:00:00Z");
-  var FIN           = Date.parse("2026-11-02T02:59:59Z");
+  var INICIO_FASE_4 = Date.parse("2026-11-02T03:00:00Z");
+  var INICIO_FASE_5 = Date.parse("2026-11-03T03:00:00Z");
+  var INICIO_FASE_6 = Date.parse("2026-11-04T03:00:00Z");
+  var FIN           = Date.parse("2026-11-05T02:59:59Z");
 
   var q = new URLSearchParams(window.location.search);
   var preview = q.get("yk_gate") === "1";
@@ -148,11 +160,15 @@
   var FASE;
   if (preview) {
     FASE = parseInt(q.get("fase") || "1", 10);
-    if (FASE !== 2 && FASE !== 3) FASE = 1;
+    if (!(FASE >= 1 && FASE <= 6)) FASE = 1;
   } else {
     if (!VISIBLE_PARA_TODOS) return;
     if (ahora < INICIO_FASE_1 || ahora > FIN) return;
-    FASE = ahora >= INICIO_FASE_3 ? 3 : (ahora >= INICIO_FASE_2 ? 2 : 1);
+    FASE = ahora >= INICIO_FASE_6 ? 6
+         : ahora >= INICIO_FASE_5 ? 5
+         : ahora >= INICIO_FASE_4 ? 4
+         : ahora >= INICIO_FASE_3 ? 3
+         : ahora >= INICIO_FASE_2 ? 2 : 1;
   }
 
   var POS = q.get("pos") === "arriba" ? "arriba" : "abajo";
@@ -173,10 +189,30 @@
     },
     // El 1/11 el Cyber ya es para todos: la barra deja de ser una puerta.
     // Decir "entrá con tu mail" ese día sería mentira, porque no hace falta.
+    // Ojo con el porcentaje: la escalera del Club llegaba al 30%, la de
+    // todos llega al 25%. Decía 30 y estuvo mal medio domingo.
     3: {
-      barra: "<strong>El Cyber ya está abierto para todos.</strong> <span class='yk-sub'>Hasta 30% OFF + 10% por transferencia. Sumate al Club y cada compra te suma el doble de estrellas.</span>",
+      barra: "<strong>El Cyber ya está abierto para todos.</strong> <span class='yk-sub'>Hasta 25% OFF + 10% por transferencia. Sumate al Club y cada compra te suma el doble de estrellas.</span>",
       titulo: "El Cyber ya está abierto para todos",
-      bajada: "Hasta 30% OFF llevando más prendas, más 10% por transferencia. Y si te sumás al Club, estos días cada compra te suma el doble de estrellas.",
+      bajada: "Hasta 25% OFF llevando más prendas, más 10% por transferencia. Y si te sumás al Club, estos días cada compra te suma el doble de estrellas.",
+      boton: "Sumarme al Club",
+    },
+    4: {
+      barra: "<strong>3x2 en remeras, sólo hoy.</strong> <span class='yk-sub'>Y hasta 40% OFF en el resto. Mañana cambia.</span>",
+      titulo: "3x2 en remeras, sólo hoy",
+      bajada: "Pagás dos remeras y llevás tres. En el resto, hasta 40% OFF. Sumate al Club y cada compra te suma el doble de estrellas.",
+      boton: "Sumarme al Club",
+    },
+    5: {
+      barra: "<strong>Hasta 40% OFF.</strong> <span class='yk-sub'>Te quedan dos días, y cada compra te suma el doble de estrellas.</span>",
+      titulo: "Hasta 40% OFF",
+      bajada: "Hay prendas al 10, al 20, al 30 y al 40 por ciento. Sumate al Club y cada compra te suma el doble de estrellas.",
+      boton: "Sumarme al Club",
+    },
+    6: {
+      barra: "<strong>Último día del CyberYokoo.</strong> <span class='yk-sub'>Hasta 40% OFF hasta las 23:59.</span>",
+      titulo: "Último día del CyberYokoo",
+      bajada: "A las 23:59 vuelve todo a su precio de siempre. También es el último día en que cada compra te suma el doble de estrellas.",
       boton: "Sumarme al Club",
     },
   }[FASE];
@@ -186,10 +222,19 @@
   function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
   var YA_DEJO_MAIL = leer("yk_gate_mail") === "1";
-  var CERRO_BARRA = Number(leer("yk_gate_barra_cerrada") || 0) > Date.now() - 7 * 864e5;
   var YA_VIO_MODAL = leer("yk_gate_modal_visto") === "1";
 
-  if (YA_DEJO_MAIL) return;
+  // Del 2 en adelante la barra ya no es una puerta, es el único cartel que
+  // anuncia la promoción del día. Por eso cambian dos cosas:
+  //   - la ve también quien ya dejó su mail (con un enlace en vez del
+  //     formulario: pedirle el mail de nuevo no tiene sentido);
+  //   - se puede cerrar, pero la llave de "cerrada" es distinta cada día,
+  //     así que cerrar la del lunes no esconde la del martes.
+  var SOLO_AVISO = FASE >= 4;
+  var CLAVE_CERRADA = SOLO_AVISO ? "yk_gate_barra_cerrada_f" + FASE : "yk_gate_barra_cerrada";
+  var CERRO_BARRA = Number(leer(CLAVE_CERRADA) || 0) > Date.now() - 7 * 864e5;
+
+  if (YA_DEJO_MAIL && !SOLO_AVISO) return;
 
   // En la ficha de producto la persona ya está decidiendo una compra:
   // ahí el modal no aparece nunca.
@@ -230,12 +275,7 @@
             return;
           }
           guardar("yk_gate_mail", "1");
-          if (FASE === 2 && res.d.url) {
-            // El Cyber ya está abierto: se entra ahora, sin esperar el mail.
-            contenedor.innerHTML =
-              '<span class="yk-gate-ok">¡Listo, ya sos del Club!</span> ' +
-              '<a class="yk-gate-entrar" href="' + res.d.url + '">Entrar al Cyber</a>';
-          } else {
+          if (FASE === 1) {
             contenedor.innerHTML =
               '<span class="yk-gate-ok">¡Listo! Te mandamos tu acceso por mail. ' +
               "Nos vemos el 31.</span>";
@@ -243,6 +283,15 @@
               var ov = document.querySelector(".yk-gate-overlay");
               if (ov) ov.remove();
             }, 3200);
+          } else {
+            // Con el Cyber abierto no hay nada que esperar: se entra ahora.
+            // La fase 2 usaba un enlace con llave; del 1 en adelante la
+            // tienda está abierta y alcanza con la categoría.
+            var urlEntrar = (FASE === 2 && res.d.url) ? res.d.url : "/cyberyokoo";
+            contenedor.innerHTML =
+              '<span class="yk-gate-ok">¡Listo, ya sos del Club!</span> ' +
+              '<a class="yk-gate-entrar" href="' + urlEntrar + '">' +
+              (FASE === 2 ? "Entrar al Cyber" : "Ver el Cyber") + "</a>";
           }
         })
         .catch(function () {
@@ -303,13 +352,17 @@
       ? '<span class="yk-gate-count"><span class="yk-gate-count-label">Faltan</span><b class="js-yk-count">—</b></span>'
       : "";
 
-    bar.innerHTML = "<div>" + TEXTOS.barra + "</div>" + contador + formulario() +
+    var accion = YA_DEJO_MAIL
+      ? '<a class="yk-gate-entrar" href="/cyberyokoo">Ver el Cyber</a>'
+      : formulario();
+
+    bar.innerHTML = "<div>" + TEXTOS.barra + "</div>" + contador + accion +
       '<button class="yk-gate-close" aria-label="Cerrar">&times;</button>';
     document.body.appendChild(bar);
     if (FASE === 1) arrancarContador(bar.querySelector(".js-yk-count"));
-    conectar(bar.querySelector("form"), bar);
+    if (bar.querySelector("form")) conectar(bar.querySelector("form"), bar);
     bar.querySelector(".yk-gate-close").addEventListener("click", function () {
-      guardar("yk_gate_barra_cerrada", String(Date.now()));
+      guardar(CLAVE_CERRADA, String(Date.now()));
       bar.remove();
     });
   }
