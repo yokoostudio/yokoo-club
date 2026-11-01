@@ -47,11 +47,10 @@
   var NUEVA_DESKTOP = BASE + "banner-ttp2-desktop.jpg";
   var NUEVA_MOBILE  = BASE + "banner-ttp2-mobile.jpg";
 
-  // El banner va siempre a la colección, antes y después del 5. Antes
-  // apuntaba a la categoría del Cyber; Juan lo pidió a /the-third-place el
-  // 30/10, que es donde está el drop (que también entra en las
-  // promociones del Cyber).
-  var DESTINO_CYBER = "/the-third-place";
+  // Mientras dura el Cyber el banner lleva al Cyber; terminado el Cyber,
+  // a la colección. (Entre el 30/10 y el 1/11 apuntó por error a
+  // /the-third-place: el banner anunciaba el Cyber y llevaba al drop.)
+  var DESTINO_CYBER = "/cyberyokoo";
   var DESTINO_DROP  = "/the-third-place";
   var ALT_DROP = "The Third Place #2 — New Collection";
 
@@ -117,7 +116,7 @@
     // pero deja de ocupar el primer lugar del menú.
     if (terminoElCyber) {
       var enMenu = document.querySelectorAll(
-        '.yokoo-drawer a[href*="cyber-yokoo"], .yokoo-drawer a[href*="cyber-yokoo-1lt17"]'
+        '.yokoo-drawer a[href*="cyberyokoo"], .yokoo-drawer a[href*="cyber-yokoo"]'
       );
       for (var n = 0; n < enMenu.length; n++) enMenu[n].style.display = "none";
     }

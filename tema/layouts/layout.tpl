@@ -241,7 +241,7 @@
                     <svg viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="15.83" stroke="currentColor" stroke-width="2"/><path d="M24.54 19H15.04" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.21 14.25L13.46 19L18.21 23.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
                 <nav>
-                    <a href="/cyber-yokoo-1lt17" style="transition-delay:.02s">{{ 'CyberYokoo' | translate }}<span class="yokoo-drawer-new yokoo-drawer-new--cyber">{{ 'NEW' | translate }}</span></a>
+                    <a href="/cyberyokoo" style="transition-delay:.02s">{{ 'CyberYokoo' | translate }}<span class="yokoo-drawer-new yokoo-drawer-new--cyber">{{ 'NEW' | translate }}</span></a>
                     <a href="/the-third-place" style="transition-delay:.04s">{{ 'The Third Place' | translate }}<span class="yokoo-drawer-new">{{ 'NEW' | translate }}</span></a>
                     <a href="/winter-sale/" style="transition-delay:.06s">{{ 'Winter Sale' | translate }}</a>
                     <a href="/bestsellers/" style="transition-delay:.08s">{{ 'Bestsellers' | translate }}</a>
