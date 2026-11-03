@@ -203,10 +203,12 @@
       bajada: "Pagás dos remeras y llevás tres. En el resto, hasta 40% OFF. Sumate al Club y cada compra te suma el doble de estrellas.",
       boton: "Sumarme al Club",
     },
+    // El 3x2 se estiró un día: el martes sigue, y la barra tiene que decir
+    // lo mismo que el bloque del inicio o se contradicen.
     5: {
-      barra: "<strong>Hasta 40% OFF.</strong> <span class='yk-sub'>Te quedan dos días, y cada compra te suma el doble de estrellas.</span>",
-      titulo: "Hasta 40% OFF",
-      bajada: "Hay prendas al 10, al 20, al 30 y al 40 por ciento. Sumate al Club y cada compra te suma el doble de estrellas.",
+      barra: "<strong>El 3x2 en remeras sigue hoy.</strong> <span class='yk-sub'>Y hasta 40% OFF en el resto. Esta noche se termina.</span>",
+      titulo: "El 3x2 en remeras sigue hoy",
+      bajada: "Llevás tres remeras y pagás dos, un día más. En el resto, hasta 40% OFF. Sumate al Club y cada compra te suma el doble de estrellas.",
       boton: "Sumarme al Club",
     },
     6: {

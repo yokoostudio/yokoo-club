@@ -6,12 +6,12 @@
 
    CALENDARIO (todo automático, nadie tiene que entrar al panel)
      2/11 00:00  aparece la grilla completa, con el bloque del 3x2 arriba
-     3/11 00:00  se va el bloque del 3x2 y quedan las seis categorías
+     4/11 00:00  se va el bloque del 3x2 y quedan las seis categorías
      5/11 00:00  se va todo
 
-   El 3x2 dura un solo día -- así lo dice el mail del lunes ("sólo hoy,
-   mañana cambia") -- así que el martes el bloque se saca solo. Si se
-   quisiera dejar los tres días, alcanza con borrar HASTA_3X2.
+   El 3x2 iba a durar un solo día, pero el lunes vendió tanto que Juan lo
+   estiró hasta el martes a la noche. El bloque se saca solo el miércoles,
+   que es cuando la promoción de verdad se termina.
 
    El 5 esto desaparece junto con el banner del Cyber, el renglón del menú
    y la barra de abajo. Igual, cuando vuelvan del viaje conviene borrar
@@ -19,8 +19,8 @@
    código dormido en el tema.
 
    PARA PROBARLO ANTES DE LA FECHA
-     ?yk_grilla=1  -> como el lunes (con el bloque del 3x2)
-     ?yk_grilla=2  -> como el martes y el miércoles (sin el 3x2)
+     ?yk_grilla=1  -> como el lunes y el martes (con el bloque del 3x2)
+     ?yk_grilla=2  -> como el miércoles (sin el 3x2)
      ?yk_grilla=0  -> apagado, aunque la fecha haya pasado
 --------------------------------------------------------------------------- #}
 <style>
@@ -120,9 +120,10 @@
 
   // Horas de Argentina (UTC-3), escritas en UTC. El país no tiene horario
   // de verano, así que la cuenta es fija.
-  var DESDE      = Date.parse("2026-11-02T03:00:00Z"); // lunes 2, 00:00
-  var HASTA_3X2  = Date.parse("2026-11-03T03:00:00Z"); // martes 3, 00:00
-  var HASTA      = Date.parse("2026-11-05T03:00:00Z"); // jueves 5, 00:00
+  var DESDE       = Date.parse("2026-11-02T03:00:00Z"); // lunes 2, 00:00
+  var ULTIMO_3X2  = Date.parse("2026-11-03T03:00:00Z"); // martes 3, 00:00
+  var HASTA_3X2   = Date.parse("2026-11-04T03:00:00Z"); // miércoles 4, 00:00
+  var HASTA       = Date.parse("2026-11-05T03:00:00Z"); // jueves 5, 00:00
 
   var DESCUENTOS = [
     ["10% OFF", "/cyber-10off"],
@@ -166,11 +167,16 @@
     caja.className = "yk-grilla-caja";
 
     if (con3x2) {
+      // El lunes todavía queda un día por delante, el martes no: decir
+      // "sólo hoy" los dos días sería mentir uno de los dos.
+      var cierre = (forzado === "1" || ahora < ULTIMO_3X2)
+        ? "Hasta mañana."
+        : "Sólo hoy.";
       var destacado = document.createElement("a");
       destacado.className = "yk-grilla-3x2";
       destacado.setAttribute("href", URL_3X2);
       destacado.innerHTML =
-        "<b>3X2 EN REMERAS</b><span>Llevás tres, pagás dos. Sólo hoy.</span>";
+        "<b>3X2 EN REMERAS</b><span>Llevás tres, pagás dos. " + cierre + "</span>";
       caja.appendChild(destacado);
     }
 
